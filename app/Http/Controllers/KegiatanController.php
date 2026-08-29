@@ -217,11 +217,53 @@ class KegiatanController extends Controller
         $events = $kegiatans->map(function ($item) {
             $mulai = $item->mulai_kegiatan ? substr($item->mulai_kegiatan, 0, 5) : '00:00';
             $akhir = $item->akhir_kegiatan ? substr($item->akhir_kegiatan, 0, 5) : '23:59';
+            
+            $namaLower = strtolower($item->nama_kegiatan);
+            $bgColor = '#059669'; // default emerald
+            $borderColor = '#047857';
+
+            if (str_contains($namaLower, 'jumat') || str_contains($namaLower, 'jum\'at')) {
+                $bgColor = '#2563eb';
+                $borderColor = '#1d4ed8';
+            } elseif (str_contains($namaLower, 'maulid') || str_contains($namaLower, 'isra') || str_contains($namaLower, 'peringatan') || str_contains($namaLower, 'hari besar')) {
+                $bgColor = '#d97706';
+                $borderColor = '#b45309';
+            } elseif (str_contains($namaLower, 'muslimah') || str_contains($namaLower, 'ibu')) {
+                $bgColor = '#db2777';
+                $borderColor = '#be185d';
+            } elseif (str_contains($namaLower, 'remaja') || str_contains($namaLower, 'irma') || str_contains($namaLower, 'pemuda')) {
+                $bgColor = '#7c3aed';
+                $borderColor = '#6d28d9';
+            } elseif (str_contains($namaLower, 'buka') || str_contains($namaLower, 'ramadhan') || str_contains($namaLower, 'tarawih')) {
+                $bgColor = '#0891b2';
+                $borderColor = '#0e7490';
+            }
+
+            $fotoUrl = ($item->foto && file_exists(public_path('storage/' . $item->foto)))
+                ? asset('storage/' . $item->foto)
+                : null;
+
             return [
                 'id' => $item->id,
-                'title' => $item->nama_kegiatan . ($item->tempat ? ' (' . $item->tempat . ')' : ''),
+                'title' => $item->nama_kegiatan,
                 'start' => $item->tanggal . 'T' . $mulai . ':00',
                 'end' => $item->tanggal . 'T' . $akhir . ':00',
+                'backgroundColor' => $bgColor,
+                'borderColor' => $borderColor,
+                'textColor' => '#ffffff',
+                'extendedProps' => [
+                    'nama_kegiatan' => $item->nama_kegiatan,
+                    'tanggal_indo'  => Carbon::parse($item->tanggal)->translatedFormat('l, d F Y'),
+                    'jam'           => $mulai . ' - ' . $akhir . ' WIB',
+                    'nama_waktu'    => $item->nama_waktu ?? '',
+                    'tempat'        => $item->tempat,
+                    'pembicara'     => $item->pembicara ?? '',
+                    'nama_khotib'   => $item->nama_khotib ?? '',
+                    'nama_muadzin'  => $item->nama_muadzin ?? '',
+                    'audience'      => $item->audience ?? 'Jamaah Umum',
+                    'foto_url'      => $fotoUrl,
+                    'edit_url'      => route('kegiatan.edit', $item->id),
+                ]
             ];
         });
         return response()->json($events);
@@ -229,7 +271,11 @@ class KegiatanController extends Controller
 
     public function calendar()
     {
-        return view('kegiatan.calendar');
+        $totalKegiatan = Kegiatan::count();
+        $bulanIni = Kegiatan::whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year)->count();
+        $mendatang = Kegiatan::where('tanggal', '>=', Carbon::today()->toDateString())->count();
+
+        return view('kegiatan.calendar', compact('totalKegiatan', 'bulanIni', 'mendatang'));
     }
 }
 
