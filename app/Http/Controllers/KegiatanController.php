@@ -33,16 +33,37 @@ class KegiatanController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->addColumn('brosur_thumb', function ($row) {
+                    if ($row->foto && file_exists(public_path('storage/' . $row->foto))) {
+                        return '<a href="' . asset('storage/' . $row->foto) . '" target="_blank" title="Lihat Brosur Asli">
+                            <img src="' . asset('storage/' . $row->foto) . '" alt="Brosur" class="rounded shadow-sm border" style="width: 50px; height: 50px; object-fit: cover;">
+                        </a>';
+                    }
+                    return '<div class="rounded bg-light text-muted border d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                        <i class="bi bi-image"></i>
+                    </div>';
+                })
                 ->editColumn('nama_kegiatan', function ($row) {
-                    return '<strong>' . e($row->nama_kegiatan) . '</strong>';
+                    $penceramah = $row->pembicara ? '<br><small class="text-muted"><i class="bi bi-person-fill text-primary me-1"></i>' . e($row->pembicara) . '</small>' : '';
+                    $khotib = $row->nama_khotib ? '<br><small class="text-muted"><i class="bi bi-mic-fill text-success me-1"></i>Khotib: ' . e($row->nama_khotib) . '</small>' : '';
+                    return '<div><span class="fw-bold text-dark">' . e($row->nama_kegiatan) . '</span>' . $penceramah . $khotib . '</div>';
                 })
                 ->editColumn('tanggal', function ($row) {
-                    return $row->tanggal ? Carbon::parse($row->tanggal)->format('d-m-Y') : '-';
+                    if (!$row->tanggal) return '-';
+                    $carbon = Carbon::parse($row->tanggal);
+                    $isPast = $carbon->isPast() && !$carbon->isToday();
+                    $badgeStatus = $isPast ? '<span class="badge bg-secondary-subtle text-secondary small d-block mt-1">Selesai</span>' : ($carbon->isToday() ? '<span class="badge bg-success-subtle text-success border border-success-subtle small d-block mt-1">Hari Ini</span>' : '<span class="badge bg-primary-subtle text-primary border border-primary-subtle small d-block mt-1">Mendatang</span>');
+                    return '<div class="text-center"><span class="fw-semibold text-dark">' . $carbon->translatedFormat('d M Y') . '</span>' . $badgeStatus . '</div>';
                 })
                 ->addColumn('waktu_acara', function ($row) {
                     $mulai = $row->mulai_kegiatan ? Carbon::parse($row->mulai_kegiatan)->format('H:i') : '-';
                     $akhir = $row->akhir_kegiatan ? Carbon::parse($row->akhir_kegiatan)->format('H:i') : '-';
-                    return '<span class="badge bg-secondary">' . $mulai . ' - ' . $akhir . ' WIB</span>';
+                    $periode = $row->nama_waktu ? '<small class="text-muted d-block">' . e($row->nama_waktu) . '</small>' : '';
+                    return '<div class="text-center"><span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-clock me-1"></i>' . $mulai . ' - ' . $akhir . ' WIB</span>' . $periode . '</div>';
+                })
+                ->editColumn('tempat', function ($row) {
+                    $audience = $row->audience ? '<br><small class="text-muted"><i class="bi bi-people me-1"></i>' . e($row->audience) . '</small>' : '';
+                    return '<div><i class="bi bi-geo-alt-fill text-danger me-1"></i><span class="fw-semibold text-dark">' . e($row->tempat) . '</span>' . $audience . '</div>';
                 })
                 ->addColumn('action', function ($row) {
                     $editUrl = route('kegiatan.edit', $row->id);
@@ -52,20 +73,24 @@ class KegiatanController extends Controller
 
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Kegiatan"><i class="bi bi-pencil-square me-1"></i> Edit</a>
                             <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Yakin ingin menghapus agenda kegiatan ini?\')">
                                 ' . $csrf . '
                                 ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Kegiatan"><i class="bi bi-trash me-1"></i> Hapus</button>
                             </form>
                         </div>
                     ';
                 })
-                ->rawColumns(['nama_kegiatan', 'waktu_acara', 'action'])
+                ->rawColumns(['brosur_thumb', 'nama_kegiatan', 'tanggal', 'waktu_acara', 'tempat', 'action'])
                 ->make(true);
         }
 
-        return view('kegiatan.index');
+        $totalKegiatan = Kegiatan::count();
+        $bulanIni = Kegiatan::whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year)->count();
+        $mendatang = Kegiatan::where('tanggal', '>=', Carbon::today()->toDateString())->count();
+
+        return view('kegiatan.index', compact('totalKegiatan', 'bulanIni', 'mendatang'));
     }
 
     public function create()
@@ -76,21 +101,45 @@ class KegiatanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kegiatan' => 'required|string|max:150',
-            'tanggal' => 'required|date',
+            'nama_kegiatan'  => 'required|string|max:150',
+            'tanggal'        => 'required|date',
             'mulai_kegiatan' => 'required',
             'akhir_kegiatan' => 'required',
-            'nama_waktu' => 'nullable|max:50',
-            'pembicara' => 'nullable|max:100',
-            'nama_khotib' => 'nullable|max:100',
-            'nama_muadzin' => 'nullable|max:100',
-            'tempat' => 'required|max:100',
-            'audience' => 'nullable|max:100',
+            'nama_waktu'     => 'nullable|max:50',
+            'pembicara'      => 'nullable|max:100',
+            'nama_khotib'    => 'nullable|max:100',
+            'nama_muadzin'   => 'nullable|max:100',
+            'tempat'         => 'required|max:100',
+            'audience'       => 'nullable|max:100',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
+        ], [
+            'nama_kegiatan.required'  => 'Nama agenda kegiatan wajib diisi.',
+            'tanggal.required'        => 'Tanggal pelaksanaan kegiatan wajib ditentukan.',
+            'mulai_kegiatan.required' => 'Waktu mulai acara wajib diisi.',
+            'akhir_kegiatan.required' => 'Waktu selesai acara wajib diisi.',
+            'tempat.required'         => 'Lokasi / tempat pelaksanaan wajib diisi.',
+            'foto.image'              => 'File brosur / foto harus berupa gambar (JPG, PNG, WEBP).',
+            'foto.max'                => 'Ukuran foto maksimal adalah 3 MB.',
         ]);
 
-        Kegiatan::create($request->all());
+        $data = $request->except(['foto']);
 
-        return redirect()->route('kegiatan.index')->with('success', 'Kegiatan berhasil ditambahkan');
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $destinationPath = public_path('storage/kegiatan');
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $file->move($destinationPath, $fileName);
+            $data['foto'] = 'kegiatan/' . $fileName;
+        }
+
+        Kegiatan::create($data);
+
+        return redirect()->route('kegiatan.index')->with('success', 'Agenda kegiatan beserta brosur berhasil ditambahkan ke jadwal.');
     }
 
     public function edit($id)
@@ -102,30 +151,64 @@ class KegiatanController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_kegiatan' => 'required|string|max:150',
-            'tanggal' => 'required|date',
+            'nama_kegiatan'  => 'required|string|max:150',
+            'tanggal'        => 'required|date',
             'mulai_kegiatan' => 'required',
             'akhir_kegiatan' => 'required',
-            'nama_waktu' => 'nullable|max:50',
-            'pembicara' => 'nullable|max:100',
-            'nama_khotib' => 'nullable|max:100',
-            'nama_muadzin' => 'nullable|max:100',
-            'tempat' => 'required|max:100',
-            'audience' => 'nullable|max:100',
+            'nama_waktu'     => 'nullable|max:50',
+            'pembicara'      => 'nullable|max:100',
+            'nama_khotib'    => 'nullable|max:100',
+            'nama_muadzin'   => 'nullable|max:100',
+            'tempat'         => 'required|max:100',
+            'audience'       => 'nullable|max:100',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
+        ], [
+            'nama_kegiatan.required'  => 'Nama agenda kegiatan wajib diisi.',
+            'tanggal.required'        => 'Tanggal pelaksanaan kegiatan wajib ditentukan.',
+            'mulai_kegiatan.required' => 'Waktu mulai acara wajib diisi.',
+            'akhir_kegiatan.required' => 'Waktu selesai acara wajib diisi.',
+            'tempat.required'         => 'Lokasi / tempat pelaksanaan wajib diisi.',
+            'foto.image'              => 'File brosur / foto harus berupa gambar (JPG, PNG, WEBP).',
+            'foto.max'                => 'Ukuran foto maksimal adalah 3 MB.',
         ]);
 
         $kegiatan = Kegiatan::findOrFail($id);
-        $kegiatan->update($request->all());
+        $data = $request->except(['foto']);
 
-        return redirect()->route('kegiatan.index')->with('success', 'Kegiatan berhasil diperbarui');
+        if ($request->hasFile('foto')) {
+            // Delete old photo if exists
+            if (!empty($kegiatan->foto) && file_exists(public_path('storage/' . $kegiatan->foto))) {
+                @unlink(public_path('storage/' . $kegiatan->foto));
+            }
+
+            $file = $request->file('foto');
+            $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $destinationPath = public_path('storage/kegiatan');
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $file->move($destinationPath, $fileName);
+            $data['foto'] = 'kegiatan/' . $fileName;
+        }
+
+        $kegiatan->update($data);
+
+        return redirect()->route('kegiatan.index')->with('success', 'Jadwal agenda kegiatan dan brosur berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $kegiatan = Kegiatan::findOrFail($id);
+
+        if (!empty($kegiatan->foto) && file_exists(public_path('storage/' . $kegiatan->foto))) {
+            @unlink(public_path('storage/' . $kegiatan->foto));
+        }
+
         $kegiatan->delete();
 
-        return redirect()->route('kegiatan.index')->with('success', 'Kegiatan berhasil dihapus');
+        return redirect()->route('kegiatan.index')->with('success', 'Agenda kegiatan berhasil dihapus.');
     }
 
     public function getEvents()
@@ -149,3 +232,4 @@ class KegiatanController extends Controller
         return view('kegiatan.calendar');
     }
 }
+

@@ -22,6 +22,7 @@ class Kegiatan extends Model
         'nama_muadzin',
         'tempat',
         'audience',
+        'foto',
     ];
 
     public function keuangans()
