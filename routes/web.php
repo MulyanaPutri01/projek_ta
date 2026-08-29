@@ -102,6 +102,7 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
     });
 
     Route::middleware('permission:kepanitiaan-list|kepanitiaan-manage')->group(function () {
+        Route::get('kepanitiaan/sk-pdf/{kegiatan_id}', [KepanitiaanController::class, 'skPdf'])->name('kepanitiaan.sk-pdf');
         Route::resource('kepanitiaan', KepanitiaanController::class);
     });
 

@@ -20,25 +20,6 @@
 
     <div class="container-fluid px-0">
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
-                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-                <div>{{ session('success') }}</div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li><i class="bi bi-exclamation-triangle me-1"></i> {{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <div class="row g-4">
             <!-- Left Side: Mosque Summary Badge Card -->
             <div class="col-xl-4 col-lg-5 col-12">

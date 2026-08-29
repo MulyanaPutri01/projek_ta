@@ -20,22 +20,6 @@
 
     <div class="container-fluid px-0">
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
-                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-                <div>{{ session('success') }}</div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
-                <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
-                <div>{{ session('error') }}</div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <!-- Role Cards Grid -->
         <div class="row g-4 mb-4">
             @foreach($roles as $role)

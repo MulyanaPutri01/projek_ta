@@ -3,16 +3,6 @@
 @section('content')
     <h1>Edit Kategori</h1>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form action="{{ route('kategori.update', $kategori->id_kategori) }}" method="POST">
         @csrf
         @method('PUT')

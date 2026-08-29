@@ -20,14 +20,6 @@
 
     <div class="container-fluid px-0">
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
-                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-                <div>{{ session('success') }}</div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <!-- Summary Metric Cards -->
         <div class="row g-3 mb-4">
             <div class="col-xl-4 col-md-4">

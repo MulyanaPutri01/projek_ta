@@ -17,17 +17,6 @@
         <a href="{{ route('galeri.index') }}" class="btn btn-secondary btn-sm mb-3"><i class="bi bi-arrow-left"></i> Kembali</a>
         <h2>Tambah Foto Galeri</h2>
 
-        @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @endif
-
         <div class="card">
             <div class="card-body pt-3">
                 <form action="{{ route('galeri.store') }}" method="POST" enctype="multipart/form-data" class="row g-3">
