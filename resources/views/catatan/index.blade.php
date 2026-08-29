@@ -9,71 +9,132 @@
             <nav>
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door me-1"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('inventaris.index') }}">Inventaris</a></li>
                     <li class="breadcrumb-item active">Catatan Kondisi</li>
                 </ol>
             </nav>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('catatan.create') }}" class="btn btn-success shadow-sm"><i class="bi bi-plus-circle me-1"></i> Tambah Catatan</a>
-            <a href="{{ route('kondisi.index') }}" class="btn btn-outline-primary shadow-sm"><i class="bi bi-tags me-1"></i> Master Kondisi</a>
+            <a href="{{ route('catatan.create') }}" class="btn btn-success shadow-sm">
+                <i class="bi bi-clipboard-plus-fill me-1"></i> Catat Kondisi Baru
+            </a>
+            <a href="{{ route('kondisi.index') }}" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-tags me-1"></i> Master Kondisi
+            </a>
         </div>
-    </div>
+    </div><!-- End Page Title -->
 
     <div class="container-fluid px-0">
 
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body pt-3">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">Filter Kondisi</label>
-                        <select id="filter_kondisi" class="form-select form-select-sm">
-                            <option value="">Semua Kondisi</option>
-                            @foreach($kondisis as $kondisi)
-                                <option value="{{ $kondisi->id }}">{{ $kondisi->nama_kondisi }}</option>
-                            @endforeach
-                        </select>
+        <!-- Summary Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-4 col-md-4">
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px; font-size: 1.5rem;">
+                                <i class="bi bi-clipboard-data-fill"></i>
+                            </div>
+                            <div class="ps-3">
+                                <span class="text-primary fw-bold small text-uppercase letter-spacing-1">Total Catatan</span>
+                                <h3 class="fw-extrabold text-dark mb-0 fs-2">{{ $totalCatatan }}</h3>
+                                <small class="text-muted">Riwayat Audit Kondisi</small>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">Filter Bulan</label>
-                        <select id="filter_month" class="form-select form-select-sm">
-                            <option value="">Semua Bulan</option>
-                            @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
-                                <option value="{{ $key }}">{{ $bulan }}</option>
-                            @endforeach
-                        </select>
+            <div class="col-xl-4 col-md-4">
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-success text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px; font-size: 1.5rem;">
+                                <i class="bi bi-calendar-check-fill"></i>
+                            </div>
+                            <div class="ps-3">
+                                <span class="text-success fw-bold small text-uppercase letter-spacing-1">Inspeksi Bulan Ini</span>
+                                <h3 class="fw-extrabold text-dark mb-0 fs-2">{{ $bulanIni }}</h3>
+                                <small class="text-muted">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</small>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold">Filter Tahun</label>
-                        <select id="filter_year" class="form-select form-select-sm">
-                            <option value="">Semua Tahun</option>
-                            @foreach(range(date('Y'), date('Y') - 5) as $year)
-                                <option value="{{ $year }}">{{ $year }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4 d-flex justify-content-end gap-2 mt-3">
-                        <button id="btn_filter" class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> Filter</button>
-                        <button id="btn_reset" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+            <div class="col-xl-4 col-md-4">
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-3 bg-emerald text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 52px; height: 52px; font-size: 1.5rem; background-color: #059669;">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="ps-3">
+                                <span class="fw-bold small text-uppercase letter-spacing-1" style="color: #065f46;">Kondisi Baik / Prima</span>
+                                <h3 class="fw-extrabold text-dark mb-0 fs-2">{{ $totalBaik }}</h3>
+                                <small class="text-muted">Aset Layak Pakai</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Main Card Table with Filters -->
         <div class="card border-0 shadow-sm">
-            <div class="card-body pt-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="row g-2 align-items-center justify-content-between">
+                    <div class="col-md-4 col-12">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-table me-2 text-primary"></i>Riwayat Catatan Kondisi Barang</h5>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <div class="d-flex gap-2 justify-content-md-end align-items-center flex-wrap">
+                            <div style="min-width: 150px;">
+                                <select id="filter_kondisi" class="form-select form-select-sm">
+                                    <option value="">Semua Status Kondisi</option>
+                                    @foreach($kondisis as $kondisi)
+                                        <option value="{{ $kondisi->id }}">{{ $kondisi->nama_kondisi }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div style="min-width: 140px;">
+                                <select id="filter_month" class="form-select form-select-sm">
+                                    <option value="">Semua Bulan</option>
+                                    @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
+                                        <option value="{{ $key }}">{{ $bulan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div style="min-width: 130px;">
+                                <select id="filter_year" class="form-select form-select-sm">
+                                    <option value="">Semua Tahun</option>
+                                    @foreach(range(date('Y'), date('Y') - 5) as $year)
+                                        <option value="{{ $year }}">{{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button id="btn_reset" class="btn btn-outline-secondary btn-sm" title="Reset Filter">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
                 <div class="table-responsive">
                     <table id="catatanTable" class="table table-hover align-middle w-100">
-                        <thead class="table-light text-center">
+                        <thead class="table-light">
                             <tr>
-                                <th style="width: 50px;">No</th>
-                                <th>Tanggal Catatan</th>
-                                <th class="text-start">Nama Barang</th>
-                                <th>Kondisi Barang</th>
-                                <th>Dicatat Oleh</th>
-                                <th style="width: 140px;">Aksi</th>
+                                <th class="text-center" style="width: 50px;">No</th>
+                                <th class="text-center" style="width: 150px;">Tanggal Catatan</th>
+                                <th>Nama Barang & Lokasi</th>
+                                <th class="text-center" style="width: 160px;">Status Kondisi</th>
+                                <th>Petugas Takmir</th>
+                                <th class="text-center" style="width: 150px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -81,6 +142,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </main>
 
@@ -88,37 +150,60 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var table = $('#catatanTable').DataTable({
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            ajax: {
-                url: "{{ route('catatan.index') }}",
-                data: function (d) {
-                    d.kondisi_id = $('#filter_kondisi').val();
-                    d.month = $('#filter_month').val();
-                    d.year = $('#filter_year').val();
+        if (typeof jQuery !== 'undefined' && $.fn.DataTable) {
+            initCatatanTable();
+        } else {
+            window.addEventListener('load', initCatatanTable);
+        }
+
+        function initCatatanTable() {
+            var table = $('#catatanTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                ajax: {
+                    url: "{{ route('catatan.index') }}",
+                    data: function (d) {
+                        d.kondisi_id = $('#filter_kondisi').val();
+                        d.month = $('#filter_month').val();
+                        d.year = $('#filter_year').val();
+                    }
+                },
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'tanggal_catatan', name: 'tanggal_catatan', className: 'text-center' },
+                    { data: 'barang_name', name: 'inventaris.nama_barang' },
+                    { data: 'kondisi_name', name: 'kondisi.nama_kondisi', className: 'text-center' },
+                    { data: 'takmir_name', name: 'takmir.nama_takmir' },
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+                ],
+                order: [[1, 'desc']],
+                language: {
+                    processing: "<div class='spinner-border text-primary spinner-border-sm me-2'></div> Memuat catatan kondisi...",
+                    search: "Cari Catatan:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ catatan",
+                    infoEmpty: "Tidak ada catatan",
+                    emptyTable: "Belum ada riwayat catatan kondisi barang yang tersimpan",
+                    paginate: {
+                        first: "«",
+                        previous: "‹",
+                        next: "›",
+                        last: "»"
+                    }
                 }
-            },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
-                { data: 'tanggal_catatan', name: 'tanggal_catatan', className: 'text-center' },
-                { data: 'barang_name', name: 'inventaris.nama_barang' },
-                { data: 'kondisi_name', name: 'kondisi.nama_kondisi', className: 'text-center' },
-                { data: 'takmir_name', name: 'takmir.nama_takmir' },
-                { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
-            ]
-        });
+            });
 
-        $('#btn_filter').click(function() {
-            table.draw();
-        });
+            $('#filter_kondisi, #filter_month, #filter_year').on('change', function() {
+                table.draw();
+            });
 
-        $('#btn_reset').click(function() {
-            $('#filter_kondisi').val('');
-            $('#filter_month').val('');
-            $('#filter_year').val('');
-            table.draw();
-        });
+            $('#btn_reset').on('click', function() {
+                $('#filter_kondisi').val('');
+                $('#filter_month').val('');
+                $('#filter_year').val('');
+                table.draw();
+            });
+        }
     });
 </script>
