@@ -9,35 +9,27 @@ class Catatan extends Model
 {
     use HasFactory;
 
-    protected $table = 'catatan'; // Nama tabel
-    protected $primaryKey = 'id_catatan'; // Primary key
-
-    public $incrementing = false; // Jika menggunakan ID custom
-    public $timestamps = false; // Jika tabel tidak memiliki kolom created_at dan updated_at
+    protected $table = 'catatan';
 
     protected $fillable = [
-        'id_catatan',
-        'inventaris_id_inventaris',
+        'inventaris_id',
         'tanggal_catatan',
-        'kondisi_id_kondisi',
-        'keterangan',
-        'takmir_id_takmir',
+        'kondisi_id',
+        'takmir_id',
     ];
 
-    // Relasi ke tabel lain
     public function inventaris()
     {
-        return $this->belongsTo(Inventaris::class, 'inventaris_id_inventaris', 'id_inventaris');
+        return $this->belongsTo(Inventaris::class, 'inventaris_id');
     }
 
     public function kondisi()
     {
-        return $this->belongsTo(Kondisi::class, 'kondisi_id_kondisi', 'id_kondisi');
+        return $this->belongsTo(Kondisi::class, 'kondisi_id');
     }
 
     public function takmir()
     {
-        return $this->belongsTo(Takmir::class, 'takmir_id_takmir', 'id_takmir');
+        return $this->belongsTo(Takmir::class, 'takmir_id');
     }
 }
-

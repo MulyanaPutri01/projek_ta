@@ -7,117 +7,139 @@ use App\Models\Posisi;
 use App\Models\Kegiatan;
 use App\Models\Takmir;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class KepanitiaanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:kepanitiaan-list')->only(['index', 'show']);
+        $this->middleware('permission:kepanitiaan-manage')->only(['create', 'store', 'edit', 'update', 'destroy']);
+    }
+
     public function index(Request $request)
     {
-        $search = $request->input('search', ''); // Ambil nilai pencarian atau kosong jika tidak ada.
+        if ($request->ajax()) {
+            $query = Kepanitiaan::with(['posisi', 'kegiatan', 'takmir'])->select('kepanitiaan.*');
 
-        // Query utama untuk mengambil data kepanitiaan.
-        $query = Kepanitiaan::query();
+            if ($request->filled('kegiatan_id')) {
+                $query->where('kegiatan_id', $request->kegiatan_id);
+            }
 
-        // Filter pencarian jika ada.
-        if (!empty($search)) {
-            $query->where('jobdesk', 'LIKE', "%{$search}%")
-                ->orWhereHas('posisi', function ($q) use ($search) {
-                    $q->where('nama_posisi', 'LIKE', "%{$search}%");
+            if ($request->filled('posisi_id')) {
+                $query->where('posisi_id', $request->posisi_id);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('kegiatan_name', function ($row) {
+                    return $row->kegiatan ? '<strong>' . e($row->kegiatan->nama_kegiatan) . '</strong>' : '-';
                 })
-                ->orWhereHas('kegiatan', function ($q) use ($search) {
-                    $q->where('nama_kegiatan', 'LIKE', "%{$search}%");
-                });
-        }
+                ->addColumn('posisi_name', function ($row) {
+                    return $row->posisi ? '<span class="badge bg-primary">' . e($row->posisi->nama_posisi) . '</span>' : '-';
+                })
+                ->addColumn('takmir_name', function ($row) {
+                    return $row->takmir ? e($row->takmir->nama_takmir) : '-';
+                })
+                ->addColumn('action', function ($row) {
+                    $deleteUrl = route('kepanitiaan.destroy', $row->id);
+                    $csrf = csrf_field();
+                    $deleteMethod = method_field('DELETE');
 
-        // Pagination
-        $kepanitiaans = $query->with(['posisi', 'kegiatan'])->paginate(5);
+                    return '
+                        <div class="d-flex justify-content-center gap-1">
+                            <button type="button" class="btn btn-warning btn-sm btn-edit" 
+                                data-id="' . $row->id . '" 
+                                data-kegiatan="' . $row->kegiatan_id . '" 
+                                data-posisi="' . $row->posisi_id . '" 
+                                data-jobdesk="' . e($row->jobdesk) . '">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin?\')">
+                                ' . $csrf . '
+                                ' . $deleteMethod . '
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                            </form>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['kegiatan_name', 'posisi_name', 'action'])
+                ->make(true);
+        }
 
         $kegiatans = Kegiatan::all();
         $posisis = Posisi::all();
         $takmirs = Takmir::all();
 
-
-        return view('kepanitiaan.index', compact('kepanitiaans', 'kegiatans', 'posisis', 'takmirs'));
+        return view('kepanitiaan.index', compact('kegiatans', 'posisis', 'takmirs'));
     }
+
     public function create()
     {
-        $kegiatans = Kegiatan::all();
-        $posisis = Posisi::all();
-        $takmirs = Takmir::all(); // Jika diperlukan
-        return view('kepanitiaan.create', compact('posisis', 'kegiatans', 'takmirs'));
+        return redirect()->route('kepanitiaan.index');
     }
+
     public function store(Request $request)
     {
         $request->validate([
-            'kegiatan_id_kegiatan' => 'required|exists:kegiatan,id_kegiatan',
-            'jobdesk' => 'required|string|max:100',
-            'posisi_id_posisi' => 'required|exists:posisi,id_posisi',
-            'takmir_id_takmir' => 'nullable|exists:takmir,id_takmir',
+            'kegiatan_id' => 'required|exists:kegiatan,id',
+            'jobdesk' => 'required|string|max:255',
+            'posisi_id' => 'required|exists:posisi,id',
         ]);
 
         $data = $request->only([
-            'kegiatan_id_kegiatan',
+            'kegiatan_id',
             'jobdesk',
-            'posisi_id_posisi',
+            'posisi_id',
         ]);
 
-        // Ambil `takmir_id_takmir` dari user login (autentikasi)
-        $data['takmir_id_takmir'] = auth()->user()->id_takmir ?? $request->input('takmir_id_takmir');
+        $data['takmir_id'] = auth()->id();
 
-        // Simpan data ke database
         Kepanitiaan::create($data);
 
         return redirect()->route('kepanitiaan.index')->with('success', 'Kepanitiaan berhasil ditambahkan.');
     }
 
-
     public function show(Kepanitiaan $kepanitiaan)
     {
-        return view('kepanitiaan.show', compact('keuangan'));
+        return redirect()->route('kepanitiaan.index');
     }
-    public function edit($id_panitia)
+
+    public function edit($id)
     {
-        // Ambil data berdasarkan ID
-        $kepanitiaan = Kepanitiaan::findOrFail($id_panitia);
+        $kepanitiaan = Kepanitiaan::findOrFail($id);
         $kegiatans = Kegiatan::all();
         $posisis = Posisi::all();
-        $takmirs = Takmir::all(); // Jika diperlukan
+        $takmirs = Takmir::all();
 
-        return view('kepanitiaan.edit', compact('kepanitiaan', 'kegiatans', 'posisis', 'takmirs'));
+        return view('kepanitiaan.index', compact('kepanitiaan', 'kegiatans', 'posisis', 'takmirs'));
     }
 
-    public function update(Request $request, $id_panitia)
+    public function update(Request $request, $id)
     {
-        // Validasi
-        $validated = $request->validate([
-            'kegiatan_id_kegiatan' => 'required|exists:kegiatan,id_kegiatan',
-            'jobdesk' => 'required|string|max:100',
-            'posisi_id_posisi' => 'required|exists:posisi,id_posisi',
-            'takmir_id_takmir' => 'nullable|exists:takmir,id_takmir',
+        $request->validate([
+            'kegiatan_id' => 'required|exists:kegiatan,id',
+            'jobdesk' => 'required|string|max:255',
+            'posisi_id' => 'required|exists:posisi,id',
         ]);
 
-        // Ambil data berdasarkan ID
-        $kepanitiaan = Kepanitiaan::findOrFail($id_panitia);
+        $kepanitiaan = Kepanitiaan::findOrFail($id);
 
-        // Update data
         $kepanitiaan->update([
-            'kegiatan_id_kegiatan' => $request->kegiatan_id_kegiatan,
+            'kegiatan_id' => $request->kegiatan_id,
             'jobdesk' => $request->jobdesk,
-            'posisi_id_posisi' => $request->posisi_id_posisi,
-            // Set takmir_id_takmir ke ID takmir yang login
-            'takmir_id_takmir' => auth()->user()->id_takmir,  // Pastikan menggunakan ID takmir dari user login
+            'posisi_id' => $request->posisi_id,
+            'takmir_id' => auth()->id(),
         ]);
 
-        // Redirect dengan pesan sukses
         return redirect()->route('kepanitiaan.index')->with('success', 'Kepanitiaan berhasil diperbarui.');
     }
 
-
-
-    public function destroy($id_panitia)
+    public function destroy($id)
     {
-        $kepanitiaan = Kepanitiaan::findOrFail($id_panitia);
+        $kepanitiaan = Kepanitiaan::findOrFail($id);
         $kepanitiaan->delete();
 
-        return redirect()->route('kepanitiaan.index');
+        return redirect()->route('kepanitiaan.index')->with('success', 'Kepanitiaan berhasil dihapus.');
     }
 }

@@ -1,309 +1,174 @@
 @section('title', 'Keuangan')
 @include('layouts.header')
 @include('layouts.sidebar')
+
 <main id="main" class="main">
-    <div class="pagetitle">
-      <h1>Keuangan Umum</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-          <li class="breadcrumb-item active">Keuangan Umum</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
+    <div class="pagetitle d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="fw-bold fs-3 text-dark mb-1">Transaksi Keuangan Masjid</h1>
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door me-1"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item active">Keuangan</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{{ route('keuangan.create') }}" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Tambah Transaksi
+        </a>
+    </div>
 
-    <div class="container">
-        <h1>Data Keuangan Masjid</h1>
+    <div class="container-fluid px-0">
+
         @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+                <div>{{ session('success') }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         @endif
-        <div class="row">
-            <!-- Pemasukan Hari Ini -->
+
+        <div class="row g-3 mb-4">
+            <!-- Pemasukan Cards -->
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pemasukan Hari Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pemasukanHariIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <div class="card-body p-3">
+                        <span class="text-success fw-bold small text-uppercase">Pemasukan Hari Ini</span>
+                        <h4 class="fw-bold text-success mb-1">Rp {{ number_format($pemasukanHariIni, 0, ',', '.') }}</h4>
+                        <small class="text-muted">Total Pemasukan: <strong class="text-success">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</strong></small>
                     </div>
                 </div>
             </div>
 
-            <!-- Pemasukan Bulan Ini -->
+            <!-- Pengeluaran Cards -->
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pemasukan Bulan Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pemasukanBulanIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+                    <div class="card-body p-3">
+                        <span class="text-danger fw-bold small text-uppercase">Pengeluaran Hari Ini</span>
+                        <h4 class="fw-bold text-danger mb-1">Rp {{ number_format($pengeluaranHariIni, 0, ',', '.') }}</h4>
+                        <small class="text-muted">Total Pengeluaran: <strong class="text-danger">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</strong></small>
                     </div>
                 </div>
             </div>
 
-            <!-- Pemasukan Tahun Ini -->
+            <!-- Saldo Card -->
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pemasukan Tahun Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pemasukanTahunIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
+                <div class="card border-0 shadow-sm h-100 mb-0" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                    <div class="card-body p-3">
+                        <span class="text-primary fw-bold small text-uppercase">Total Saldo Kas Tersedia</span>
+                        <h4 class="fw-bold text-primary mb-1">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</h4>
+                        <small class="text-muted">Status Kas Terkini</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <!-- Pengeluaran Hari Ini -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pengeluaran Hari Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pengeluaranHariIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-            <!-- Pengeluaran Bulan Ini -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pengeluaran Bulan Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pengeluaranBulanIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pengeluaran Tahun Ini -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pengeluaran Tahun Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($pengeluaranTahunIni, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <!-- Total Pemasukan -->
-            <div class="col-md-4">
-                <div class="card info-card sales-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Pemasukan</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($totalPemasukan, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Pengeluaran -->
-            <div class="col-md-4">
-                <div class="card info-card revenue-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Pengeluaran</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($totalPengeluaran, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Total Saldo Saat Ini -->
-            <div class="col-md-4">
-                <div class="card info-card revenue-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Saldo Saat Ini</h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <div class="ps-3">
-                                <h5>Rp{{ number_format($totalSaldo, 0, ',', '.') }}.-</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <br>
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-
-                <form method="GET" action="{{ route('keuangan.index') }}" class="d-inline">
-                    <div class="d-flex flex-wrap align-items-end">
-                        <div class="me-2 mb-2">
-                            <label for="search" class="form-label black-text">Cari Lainnya : </label>
-                            <input type="text" name="search" class="form-control" placeholder="Cari..." value="{{ $search ?? '' }}">
-                        </div>
-                        <div class="me-2 mb-2">
-                            <label for="month" class="form-label black-text">Bulan :</label>
-                            <select name="month" class="form-control">
-                                <option value="">Pilih Bulan</option>
-                                @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
-                                    <option value="{{ $key }}" {{ request('month') == $key ? 'selected' : '' }}>{{ $bulan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="me-2 mb-2">
-                            <label for="year" class="form-label black-text">Tahun :</label>
-                            <select name="year" class="form-control">
-                                <option value="">Pilih Tahun</option>
-                                @foreach(range(date('Y'), date('Y') - 5) as $year)
-                                    <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <button type="submit" class="btn btn-primary">Cari</button>
-                            <a href="{{ route('keuangan.index') }}" class="btn btn-secondary mt-2">Tampil Seluruh Data</a>
-                        </div>
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <a href="{{ route('keuangan.create') }}" class="btn btn-primary">Tambah Data</a>
-                            <a href="{{ route('kategori.index') }}" class="btn btn-secondary mt-2">Kategori</a>
-                        </div>
-
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-body">
-                <br>
-                @if($keuangan->isEmpty())
-                    <div class="alert alert-danger bg-danger text-light border-0 alert-dismissible fade show" role="alert">
-                            <h5 class="text-center">Tidak ada data keuangan yang dicari.</h5>
-                    </div>
-                @else
-                <div class="table-responsive" style="overflow-x: auto; max-width: 100%;">
-                    <table class="table table-bordered" >
-                        <thead class="sticky-top bg-white" >
-                            <tr>
-                                <th style="text-align: center;">No</th>
-                                <th style="text-align: center;">Tanggal</th>
-                                <th style="text-align: center;">Sumber Keuangan</th>
-                                <th style="text-align: center;">Keterangan</th>
-                                <th style="text-align: center;">Nominal</th>
-                                <th style="text-align: center;">Nama Donatur</th>
-                                <th style="text-align: center;">Nama Kegiatan</th>
-                                <th style="text-align: center;">Pemasukan</th>
-                                <th style="text-align: center;">Pengeluaran</th>
-                                <th style="text-align: center;">Dibuat Oleh</th>
-                                <th style="text-align: center;">Total Saldo</th>
-                                <th style="text-align: center;">Aksi</th>
-                            </tr>
-
-                        </thead>
-                        <tbody>
-
-                            @php
-                                // Set saldo awal dari Controller
-                                $runningSaldo = $saldoAwal;
-                            @endphp
-                            @foreach($keuangan as $item)
-                            @php
-                                // Tambahkan atau kurangi berdasarkan kategori K1 (pemasukan) atau K2 (pengeluaran)
-                                if($item->kategori_id_kategori == 'K1') {
-                                    $runningSaldo += $item->nominal;
-                                } else {
-                                    $runningSaldo -= $item->nominal;
-                                }
-                            @endphp
-                          
-                            <tr>
-                                <td>{{ $loop->iteration + ($keuangan->currentPage() - 1) * $keuangan->perPage()  }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</td>
-                                <td>{{ $item->sumber_keuangan }}</td>
-                                <td>{{ $item->keterangan }}</td>
-                                <td>Rp{{ number_format($item->nominal, 0, ',', '.') }}.-</td>
-                                <td>{{ $item->donatur_id_donatur ? $item->donatur->nama_donatur : '-' }}</td>
-                                <td>{{ $item->kegiatan_id_kegiatan ? $item->kegiatan->nama_kegiatan : '-' }}</td>
-                                <td><span style="white-space: nowrap;">Rp{{ number_format($item->kategori_id_kategori === 'K1' ? $item->nominal : 0, 0, ',', '.') }}.-</span></td>
-                                <td><span style="white-space: nowrap;">Rp{{ number_format($item->kategori_id_kategori === 'K2' ? $item->nominal : 0, 0, ',', '.') }}.-</span></td>
-                                <td>{{ $item->takmir->nama_takmir }}</td>
-                                <!-- TAMPILKAN RUNNING SALDO (Bukan $saldoAkhir) -->
-                                <td><span style="white-space: nowrap;">Rp{{ number_format($runningSaldo, 0, ',', '.') }}</span></td>
-
-                                <td style="display: flex; gap: 10px; align-items: center;">
-                                    <a href="{{ route('keuangan.edit', $item->id_keuangan) }}" class="btn btn-warning btn-sm">Edit</a>
-                                    <form action="{{ route('keuangan.destroy', $item->id_keuangan) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">Hapus</button>
-                                    </form>
-                                </td>
-
-
-                            </tr>
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body pt-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Filter Kategori</label>
+                        <select id="filter_kategori" class="form-select form-select-sm">
+                            <option value="">Semua Kategori</option>
+                            @foreach($kategoris as $kategori)
+                                <option value="{{ $kategori->id }}">{{ $kategori->nama_kategori }}</option>
                             @endforeach
-                        </tbody>
-                            <div class="mt-3">
-                                <strong>Total Keuangan:</strong> {{ $totalKeuangan }}
-                            </div>
+                        </select>
+                    </div>
 
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Filter Bulan</label>
+                        <select id="filter_month" class="form-select form-select-sm">
+                            <option value="">Semua Bulan</option>
+                            @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
+                                <option value="{{ $key }}">{{ $bulan }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Filter Tahun</label>
+                        <select id="filter_year" class="form-select form-select-sm">
+                            <option value="">Semua Tahun</option>
+                            @foreach(range(date('Y'), date('Y') - 5) as $year)
+                                <option value="{{ $year }}">{{ $year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 d-flex justify-content-end gap-2 mt-3">
+                        <button id="btn_filter" class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> Filter</button>
+                        <button id="btn_reset" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body pt-4">
+                <div class="table-responsive">
+                    <table id="keuanganTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width: 40px;">No</th>
+                                <th>Tanggal</th>
+                                <th class="text-start">Sumber Keuangan</th>
+                                <th>Keterangan</th>
+                                <th class="text-end">Pemasukan</th>
+                                <th class="text-end">Pengeluaran</th>
+                                <th>Donatur</th>
+                                <th>Kegiatan</th>
+                                <th>Dibuat Oleh</th>
+                                <th style="width: 120px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
                     </table>
                 </div>
-                    <!-- Tombol Pagination -->
-                    {{ $keuangan->withQueryString()->links() }}
-                @endif
             </div>
         </div>
     </div>
+</main>
 
 @include('layouts.footer')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = $('#keuanganTable').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: {
+                url: "{{ route('keuangan.index') }}",
+                data: function (d) {
+                    d.kategori_id = $('#filter_kategori').val();
+                    d.month = $('#filter_month').val();
+                    d.year = $('#filter_year').val();
+                }
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                { data: 'tanggal', name: 'tanggal', className: 'text-center' },
+                { data: 'sumber_keuangan', name: 'sumber_keuangan' },
+                { data: 'keterangan', name: 'keterangan' },
+                { data: 'nominal_pemasukan', name: 'nominal', className: 'text-end' },
+                { data: 'nominal_pengeluaran', name: 'nominal', className: 'text-end' },
+                { data: 'donatur_name', name: 'donatur.nama_donatur' },
+                { data: 'kegiatan_name', name: 'kegiatan.nama_kegiatan' },
+                { data: 'takmir_name', name: 'takmir.nama_takmir' },
+                { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+            ]
+        });
+
+        $('#btn_filter').click(function() {
+            table.draw();
+        });
+
+        $('#btn_reset').click(function() {
+            $('#filter_kategori').val('');
+            $('#filter_month').val('');
+            $('#filter_year').val('');
+            table.draw();
+        });
+    });
+</script>

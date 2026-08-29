@@ -1,113 +1,292 @@
-@section('title', 'Catatan Barang')
+@section('title', 'Profil Masjid')
 @include('layouts.header')
 @include('layouts.sidebar')
+
 <main id="main" class="main">
-    <div class="pagetitle">
-      <h1>Profil Masjid</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-          <li class="breadcrumb-item active">Profil Masjid</li>
-        </ol>
-      </nav>
+    <div class="pagetitle d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="fw-bold fs-3 text-dark mb-1">Profil Masjid</h1>
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door me-1"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item active">Profil Masjid</li>
+                </ol>
+            </nav>
+        </div>
+        <!-- <a href="/" target="_blank" class="btn btn-outline-primary shadow-sm">
+            <i class="bi bi-globe me-1"></i> Lihat Tampilan Website
+        </a> -->
     </div><!-- End Page Title -->
 
-    <div class="container">
-        <h1>Data Profil Masjid</h1>
+    <div class="container-fluid px-0">
+
         @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+                <div>{{ session('success') }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         @endif
 
-        <br>
-        <!-- Formulir Pencarian -->
-        <!--<div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-
-                <form method="GET" action="{{ route('profilmasjid.index') }}" class="d-inline">
-                    <div class="d-flex flex-wrap align-items-end">
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <label for="search" class="form-label black-text">Cari Lainnya : </label>
-                            <input type="text" name="search" class="form-control" placeholder="Cari..." value="{{ $search ?? '' }}">
-                        </div>
-                        
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <button type="submit" class="btn btn-primary">Cari</button>
-                            <a href="{{ route('profilmasjid.index') }}" class="btn btn-secondary mt-2">Tampil Seluruh Data</a>
-                        </div>
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <a href="{{ route('profilmasjid.create') }}" class="btn btn-primary">Tambah Data</a>
-                        </div>
-
-                    </div>
-                </form>
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li><i class="bi bi-exclamation-triangle me-1"></i> {{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>-->
+        @endif
 
-        <div class="card">
-            
-            
-            <div class="card-body">
-                <br>
-                <div class="me-2 ">
-                    <a href="{{ route('profilmasjid.create') }}" class="btn btn-primary">Tambah Data</a>
-                </div>
-                <br>
-                @if($profil->isEmpty())
-                    <div class="alert alert-danger bg-danger text-light border-0 alert-dismissible fade show" role="alert">
-                            <h5 class="text-center">Tidak ada data profil yang dicari.</h5>
+        <div class="row g-4">
+            <!-- Left Side: Mosque Summary Badge Card -->
+            <div class="col-xl-4 col-lg-5 col-12">
+                <div class="card border-0 shadow-sm text-center p-3">
+                    <div class="card-body">
+                        <div class="position-relative rounded-4 overflow-hidden mb-3 shadow-sm border" style="max-height: 190px;">
+                            <img id="sideBgPreview" src="{{ $profil->foto_masjid ? asset('storage/' . $profil->foto_masjid) : asset('assets-landing/img/hero-bg.jpg') }}" class="w-100 h-100 object-fit-cover" style="height: 180px; object-fit: cover;" alt="Hero Background Masjid">
+                            <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white small">
+                                <i class="bi bi-image me-1"></i> Background Hero
+                            </span>
+                        </div>
+
+                        <h4 class="fw-bold text-dark mb-1">{{ $profil->nama_masjid }}</h4>
+                        <span class="badge bg-success-light text-success mb-3 px-3 py-1 rounded-pill">
+                            <i class="bi bi-shield-check me-1"></i> Sistem Profil Resmi
+                        </span>
+
+                        <hr class="my-3">
+
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> Alamat:
+                                </span>
+                                <p class="text-dark small mb-0">{{ $profil->alamat }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">
+                                    <i class="bi bi-telephone-fill text-success me-1"></i> Telepon / WhatsApp:
+                                </span>
+                                <p class="text-dark small mb-0">{{ $profil->telepon ?? '-' }}</p>
+                            </div>
+
+                            <div class="mb-0">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">
+                                    <i class="bi bi-person-check-fill text-primary me-1"></i> Diperbarui Oleh:
+                                </span>
+                                <p class="text-dark small mb-0">
+                                    {{ $profil->takmir ? $profil->takmir->nama_takmir : 'Administrator' }}
+                                    <span class="text-muted d-block small">{{ $profil->updated_at ? $profil->updated_at->diffForHumans() : '-' }}</span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                @else
-                <div class="table-responsive" style="overflow-x: auto; max-width: 100%;">
-
-                    <table class="table table-bordered" >
-                        <thead class="sticky-top bg-white" >
-                            <tr>
-                                <th style="text-align: center;">ID</th>
-                                <th style="text-align: center;">Nama Masjid</th>
-                                <th style="text-align: center;">Sejarah Masjid</th>
-                                <th style="text-align: center;">Visi</th>
-                                <th style="text-align: center;">Misi</th>
-                                <th style="text-align: center;">Alamat</th>
-                                <th style="text-align: center;">Nomor Telepon</th>
-                                <th style="text-align: center;">Dibuat Oleh</th>
-                                <th style="text-align: center;">Aksi</th>
-                            </tr>
-
-                        </thead>
-                        <tbody>
-                            @foreach($profil as $item)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->nama_masjid}}</td>
-                                <td>{{ $item->sejarah}}</td>
-                                <td>{{ $item->visi}}</td>
-                                <td>{{ $item->misi}}</td>
-                                <td>{{ $item->alamat}}</td>
-                                <td>{{ $item->telepon}}</td>
-                                <td>{{ $item->takmir->nama_takmir }}</td>
-                                <td style="display: flex; gap: 10px; align-items: center;">
-                                    <a href="{{ route('profilmasjid.edit', $item->id_profil) }}" class="btn btn-warning btn-sm">Edit</a>
-                                    <form action="{{ route('catatan.destroy', $item->id_profil) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-
-
-                    </table>
                 </div>
-                    
-                @endif
+            </div>
 
+            <!-- Right Side: Profile Tabs (Overview & Edit with Summernote) -->
+            <div class="col-xl-8 col-lg-7 col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body pt-3">
+                        <!-- Bordered Tabs -->
+                        <ul class="nav nav-tabs nav-tabs-bordered" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#profile-overview" type="button" role="tab">
+                                    <i class="bi bi-card-text me-1"></i> Ringkasan Profil
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#profile-edit" type="button" role="tab">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit Profil & Background
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content pt-3">
+
+                            <!-- Tab 1: Ringkasan Profil (Overview) -->
+                            <div class="tab-pane fade show active" id="profile-overview" role="tabpanel">
+                                <h5 class="card-title text-dark fw-bold pb-2 fs-5">Informasi Umum</h5>
+
+                                <div class="row mb-3">
+                                    <div class="col-lg-3 col-md-4 text-muted fw-bold small">Nama Masjid</div>
+                                    <div class="col-lg-9 col-md-8 fw-semibold text-dark">{{ $profil->nama_masjid }}</div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-lg-3 col-md-4 text-muted fw-bold small">Nomor Telepon</div>
+                                    <div class="col-lg-9 col-md-8 text-dark">{{ $profil->telepon ?? '-' }}</div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-lg-3 col-md-4 text-muted fw-bold small">Alamat Lengkap</div>
+                                    <div class="col-lg-9 col-md-8 text-dark">{{ $profil->alamat }}</div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-lg-3 col-md-4 text-muted fw-bold small">Foto Background Hero</div>
+                                    <div class="col-lg-9 col-md-8">
+                                        <div class="border rounded-3 p-1 bg-light d-inline-block" style="max-width: 280px;">
+                                            <img src="{{ $profil->foto_masjid ? asset('storage/' . $profil->foto_masjid) : asset('assets-landing/img/hero-bg.jpg') }}" class="img-fluid rounded-2" style="max-height: 130px; object-fit: cover;" alt="Hero Background">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5 class="card-title text-dark fw-bold pt-2 pb-2 fs-5">Sejarah Masjid</h5>
+                                <div class="p-3 bg-light rounded-3 mb-3 text-secondary content-rendered" style="line-height: 1.7;">
+                                    {!! $profil->sejarah ?? '<p>Belum ada catatan sejarah masjid.</p>' !!}
+                                </div>
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                                            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-compass me-1"></i> Visi Masjid</h6>
+                                            <div class="mb-0 text-dark small content-rendered" style="line-height: 1.6;">
+                                                {!! $profil->visi ?? '<p>Belum ada visi.</p>' !!}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 h-100" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                                            <h6 class="fw-bold text-success mb-2"><i class="bi bi-bullseye me-1"></i> Misi Masjid</h6>
+                                            <div class="mb-0 text-dark small content-rendered" style="line-height: 1.6;">
+                                                {!! $profil->misi ?? '<p>Belum ada misi.</p>' !!}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Edit Profil Masjid Form with Summernote -->
+                            <div class="tab-pane fade" id="profile-edit" role="tabpanel">
+                                <form action="{{ route('profilmasjid.update', $profil->id) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <div class="col-md-7">
+                                        <label class="form-label fw-bold small">Nama Masjid <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                                            <input type="text" name="nama_masjid" class="form-control" value="{{ old('nama_masjid', $profil->nama_masjid) }}" required maxlength="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-bold small">Nomor Telepon / WhatsApp</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                                            <input type="text" name="telepon" class="form-control" value="{{ old('telepon', $profil->telepon) }}" placeholder="08123456789" maxlength="20">
+                                        </div>
+                                    </div>
+
+                                    <!-- Upload Foto / Background Hero Utama -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Foto Background Hero Halaman Utama Website</label>
+                                        <div class="d-flex align-items-center gap-3 flex-wrap p-3 bg-light rounded-3 border">
+                                            <div class="border rounded-3 p-1 bg-white text-center shadow-sm" style="width: 150px; height: 95px;">
+                                                <img id="bgPreview" src="{{ $profil->foto_masjid ? asset('storage/' . $profil->foto_masjid) : asset('assets-landing/img/hero-bg.jpg') }}" class="w-100 h-100 rounded-2" style="object-fit: cover;" alt="Preview Background">
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="file" name="foto_masjid" id="fotoMasjidInput" class="form-control form-control-sm" accept="image/jpeg,image/png,image/jpg,image/webp">
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="bi bi-info-circle me-1"></i>Pilih foto bangunan masjid atau pemandangan untuk dijadikan background tampilan hero landing page (Format: JPG, PNG, WEBP, Maks. 5MB).
+                                                </small>
+                                                @if($profil->foto_masjid)
+                                                    <div class="form-check mt-2">
+                                                        <input class="form-check-input" type="checkbox" name="hapus_foto" value="1" id="hapusFotoCheck">
+                                                        <label class="form-check-label small text-danger fw-semibold" for="hapusFotoCheck">
+                                                            <i class="bi bi-trash me-1"></i>Hapus background kustom & gunakan gambar default
+                                                        </label>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Alamat Lengkap Masjid <span class="text-danger">*</span></label>
+                                        <textarea name="alamat" class="form-control" rows="2" required placeholder="Dukuh, Desa, Kecamatan, Kabupaten...">{{ old('alamat', $profil->alamat) }}</textarea>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Sejarah Singkat Masjid</label>
+                                        <textarea name="sejarah" class="form-control summernote" rows="5" placeholder="Tuliskan sejarah singkat pendirian masjid...">{{ old('sejarah', $profil->sejarah) }}</textarea>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Visi Masjid</label>
+                                        <textarea name="visi" class="form-control summernote" rows="4" placeholder="Visi masjid...">{{ old('visi', $profil->visi) }}</textarea>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Misi Masjid</label>
+                                        <textarea name="misi" class="form-control summernote" rows="4" placeholder="Misi masjid...">{{ old('misi', $profil->misi) }}</textarea>
+                                    </div>
+
+                                    <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                            <i class="bi bi-save me-1"></i> Simpan Perubahan Profil & Background
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div><!-- End Bordered Tabs -->
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
+</main>
 
 @include('layouts.footer')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof jQuery !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
+            initSummernote();
+        } else {
+            window.addEventListener('load', initSummernote);
+        }
+
+        function initSummernote() {
+            $('.summernote').summernote({
+                placeholder: 'Ketik konten di sini...',
+                tabsize: 2,
+                height: 180,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link']],
+                    ['view', ['fullscreen', 'codeview']]
+                ]
+            });
+        }
+
+        // Live image preview for hero background input
+        const fotoInput = document.getElementById('fotoMasjidInput');
+        if (fotoInput) {
+            fotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const previewEl = document.getElementById('bgPreview');
+                        const sidePreviewEl = document.getElementById('sideBgPreview');
+                        if (previewEl) previewEl.src = event.target.result;
+                        if (sidePreviewEl) sidePreviewEl.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>

@@ -2,145 +2,145 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Catatan;
+use App\Models\Inventaris;
+use App\Models\Kondisi;
+use App\Models\Takmir;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Yajra\DataTables\Facades\DataTables;
 
 class CatatanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:catatan-list')->only(['index', 'show']);
+        $this->middleware('permission:catatan-create')->only(['create', 'store']);
+        $this->middleware('permission:catatan-edit')->only(['edit', 'update']);
+        $this->middleware('permission:catatan-delete')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
-        $search = $request->input('search', ''); // Ambil nilai pencarian atau kosong jika tidak ada.
+        if ($request->ajax()) {
+            $query = Catatan::with(['inventaris', 'kondisi', 'takmir'])->select('catatan.*');
 
-        // Query utama menggunakan Query Builder
-        $query = DB::table('catatan')
-            ->join('inventaris', 'catatan.inventaris_id_inventaris', '=', 'inventaris.id_inventaris')
-            ->join('kondisi', 'catatan.kondisi_id_kondisi', '=', 'kondisi.id_kondisi')
-            ->join('takmir', 'catatan.takmir_id_takmir', '=', 'takmir.id_takmir')
-            ->select(
-                'catatan.*',
-                'inventaris.nama_barang',
-                'kondisi.nama_kondisi',
-                'takmir.nama_takmir'
-            );
+            if ($request->filled('kondisi_id')) {
+                $query->where('kondisi_id', $request->kondisi_id);
+            }
 
-        // Filter pencarian jika ada.
-        if (!empty($search)) {
-            $query->orWhere('inventaris.nama_barang', 'LIKE', "%{$search}%")
-                ->orWhere('kondisi.nama_kondisi', 'LIKE', "%{$search}%");
-                //->where('catatan.keterangan', 'LIKE', "%{$search}%")
+            if ($request->filled('month')) {
+                $query->whereMonth('tanggal_catatan', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->whereYear('tanggal_catatan', $request->year);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('tanggal_catatan', function ($row) {
+                    return $row->tanggal_catatan ? Carbon::parse($row->tanggal_catatan)->format('d-m-Y') : '-';
+                })
+                ->addColumn('barang_name', function ($row) {
+                    return $row->inventaris ? '<strong>' . e($row->inventaris->nama_barang) . '</strong>' : '-';
+                })
+                ->addColumn('kondisi_name', function ($row) {
+                    return $row->kondisi ? '<span class="badge bg-info text-dark">' . e($row->kondisi->nama_kondisi) . '</span>' : '-';
+                })
+                ->addColumn('takmir_name', function ($row) {
+                    return $row->takmir ? e($row->takmir->nama_takmir) : '-';
+                })
+                ->addColumn('action', function ($row) {
+                    $editUrl = route('catatan.edit', $row->id);
+                    $deleteUrl = route('catatan.destroy', $row->id);
+                    $csrf = csrf_field();
+                    $deleteMethod = method_field('DELETE');
+
+                    return '
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus catatan ini?\')">
+                                ' . $csrf . '
+                                ' . $deleteMethod . '
+                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i> Hapus</button>
+                            </form>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['barang_name', 'kondisi_name', 'action'])
+                ->make(true);
         }
 
-        // Pencarian berdasarkan bulan
-        if ($request->has('month') && !empty($request->month)) {
-            $query->whereRaw('MONTH(catatan.tanggal_catatan) = ?', [$request->input('month')]);
-        }
+        $kondisis = Kondisi::all();
+        $totalCatatan = Catatan::count();
 
-        // Pencarian berdasarkan tahun
-        if ($request->has('year') && !empty($request->year)) {
-            $query->whereRaw('YEAR(catatan.tanggal_catatan) = ?', [$request->input('year')]);
-        }
-
-        // Ambil data dengan pagination.
-        $catatan = $query->paginate(5); // Sesuaikan jumlah per halaman jika diperlukan.
-
-        // Jumlah semua data.
-        $totalCatatan = DB::table('catatan')->count();
-
-        return view('catatan.index', compact('catatan', 'totalCatatan', 'search'));
+        return view('catatan.index', compact('kondisis', 'totalCatatan'));
     }
 
     public function create()
     {
-        $kondisis = DB::table('kondisi')->get();
-        $inventariss = DB::table('inventaris')->get();
-        $takmirs = DB::table('takmir')->get();
+        $kondisis = Kondisi::all();
+        $inventariss = Inventaris::all();
+        $takmirs = Takmir::all();
         return view('catatan.create', compact('kondisis', 'inventariss', 'takmirs'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'inventaris_id_inventaris' => 'required|exists:inventaris,id_inventaris',
+            'inventaris_id' => 'required|exists:inventaris,id',
             'tanggal_catatan' => 'required|date',
-            'kondisi_id_kondisi' => 'required|exists:kondisi,id_kondisi',
-            //'keterangan' => 'required|string|max:50',
+            'kondisi_id' => 'required|exists:kondisi,id',
         ]);
 
-        // Ambil ID terakhir dan buat ID baru
-        $lastId = DB::table('catatan')->orderBy('id_catatan', 'desc')->value('id_catatan');
-        $newIdNumber = $lastId ? (int) substr($lastId, 1) + 1 : 1; // Increment dari ID terakhir
-        $newId = 'C' . str_pad($newIdNumber, 2, '0', STR_PAD_LEFT); // Format ID baru, contoh: C01, C02, dst.
-
-        // Data untuk insert
         $data = $request->only([
-            'inventaris_id_inventaris',
+            'inventaris_id',
             'tanggal_catatan',
-            'kondisi_id_kondisi',
-            //'keterangan',
+            'kondisi_id',
         ]);
-        $data['id_catatan'] = $newId; // Tambahkan ID ke data
-        $data['takmir_id_takmir'] = auth()->user()->id_takmir;
+        $data['takmir_id'] = auth()->id();
 
-        // Simpan data ke tabel
-        DB::table('catatan')->insert($data);
+        Catatan::create($data);
 
         return redirect()->route('catatan.index')->with('success', 'Catatan berhasil ditambahkan.');
     }
 
-    public function edit($id_catatan)
+    public function edit($id)
     {
-        // Ambil data catatan berdasarkan ID
-        $catatan = DB::table('catatan')->where('id_catatan', $id_catatan)->first();
+        $catatan = Catatan::findOrFail($id);
+        $kondisis = Kondisi::all();
+        $inventariss = Inventaris::all();
+        $takmirs = Takmir::all();
 
-        if (!$catatan) {
-            return redirect()->route('catatan.index')->with('error', 'Catatan tidak ditemukan.');
-        }
-
-        // Ambil data tambahan untuk dropdown, jika diperlukan
-        $kondisis = DB::table('kondisi')->get();
-        $inventariss = DB::table('inventaris')->get();
-        $takmirs = DB::table('takmir')->get();
-
-        // Tampilkan view edit
         return view('catatan.edit', compact('catatan', 'kondisis', 'inventariss', 'takmirs'));
     }
-    public function update(Request $request, $id_catatan)
+
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'inventaris_id_inventaris' => 'required|exists:inventaris,id_inventaris',
+            'inventaris_id' => 'required|exists:inventaris,id',
             'tanggal_catatan' => 'required|date',
-            'kondisi_id_kondisi' => 'required|exists:kondisi,id_kondisi',
-            //'keterangan' => 'required|string|max:50',
+            'kondisi_id' => 'required|exists:kondisi,id',
         ]);
 
-        // Cek apakah catatan dengan ID tersebut ada
-        $catatan = DB::table('catatan')->where('id_catatan', $id_catatan)->first();
-        if (!$catatan) {
-            return redirect()->route('catatan.index')->with('error', 'Catatan tidak ditemukan.');
-        }
-
-        // Data untuk diupdate
+        $catatan = Catatan::findOrFail($id);
         $data = $request->only([
-            'inventaris_id_inventaris',
+            'inventaris_id',
             'tanggal_catatan',
-            'kondisi_id_kondisi',
-            //'keterangan',
+            'kondisi_id',
         ]);
+        $data['takmir_id'] = auth()->id();
 
-        // Tambahkan informasi siapa yang mengedit
-        $data['takmir_id_takmir'] = auth()->user()->id_takmir; // ID takmir yang sedang login
-
-        // Update data
-        DB::table('catatan')->where('id_catatan', $id_catatan)->update($data);
+        $catatan->update($data);
 
         return redirect()->route('catatan.index')->with('success', 'Catatan berhasil diperbarui.');
     }
 
-
-    public function destroy($id_catatan)
+    public function destroy($id)
     {
-        // Hapus data menggunakan Query Builder
-        DB::table('catatan')->where('id_catatan', $id_catatan)->delete();
+        $catatan = Catatan::findOrFail($id);
+        $catatan->delete();
 
         return redirect()->route('catatan.index')->with('success', 'Catatan berhasil dihapus.');
     }

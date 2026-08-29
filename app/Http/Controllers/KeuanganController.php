@@ -8,120 +8,97 @@ use App\Models\Kegiatan;
 use App\Models\Donatur;
 use App\Models\Takmir;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Yajra\DataTables\Facades\DataTables;
 
 class KeuanganController extends Controller
 {
     public function __construct()
     {
-        // Membatasi seluruh fungsi di controller ini khusus role bendahara
-        $this->middleware('role:bendahara');
+        $this->middleware('permission:keuangan-list')->only(['index', 'show']);
+        $this->middleware('permission:keuangan-create')->only(['create', 'store']);
+        $this->middleware('permission:keuangan-edit')->only(['edit', 'update']);
+        $this->middleware('permission:keuangan-delete')->only(['destroy']);
     }
     
     public function index(Request $request)
     {
-        $search = $request->input('search', ''); // Ambil nilai pencarian atau kosong jika tidak ada.
+        if ($request->ajax()) {
+            $query = Keuangan::with(['kategori', 'donatur', 'kegiatan', 'takmir'])->select('keuangan.*');
 
-        // 1. Query utama untuk mengambil data keuangan.
-        $query = Keuangan::query();
+            if ($request->filled('kategori_id')) {
+                $query->where('kategori_id', $request->kategori_id);
+            }
 
-        // Filter pencarian jika ada.
-        if (!empty($search)) {
-            $query->where('sumber_keuangan', 'LIKE', "%{$search}%")
-                ->orWhere('keterangan', 'LIKE', "%{$search}%")
-                ->orWhereHas('donatur', function ($q) use ($search) {
-                    $q->where('nama_donatur', 'LIKE', "%{$search}%");
+            if ($request->filled('month')) {
+                $query->whereMonth('tanggal', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->whereYear('tanggal', $request->year);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('tanggal', function ($row) {
+                    return $row->tanggal ? Carbon::parse($row->tanggal)->translatedFormat('d F Y') : '-';
                 })
-                ->orWhereHas('kegiatan', function ($q) use ($search) {
-                    $q->where('nama_kegiatan', 'LIKE', "%{$search}%");
+                ->addColumn('nominal_pemasukan', function ($row) {
+                    return $row->kategori_id == 1 ? '<span class="text-success fw-bold">Rp' . number_format($row->nominal, 0, ',', '.') . '</span>' : '-';
                 })
-                ->orWhere(function ($q) use ($search) {
-                    $q->where('kategori_id_kategori', 'K1') // Pemasukan
-                        ->where('nominal', 'LIKE', "%{$search}%");
+                ->addColumn('nominal_pengeluaran', function ($row) {
+                    return $row->kategori_id == 2 ? '<span class="text-danger fw-bold">Rp' . number_format($row->nominal, 0, ',', '.') . '</span>' : '-';
                 })
-                ->orWhere(function ($q) use ($search) {
-                    $q->where('kategori_id_kategori', 'K2') // Pengeluaran
-                        ->where('nominal', 'LIKE', "%{$search}%");
-                });
-        }
-        // Pencarian berdasarkan bulan
-        if ($request->has('month') && !empty($request->month)) {
-            $query->whereRaw('DATE_FORMAT(tanggal, "%m") = ?', [$request->input('month')]);
+                ->addColumn('donatur_name', function ($row) {
+                    return $row->donatur ? '<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle"><i class="bi bi-person-heart me-1"></i>' . e($row->donatur->nama_donatur) . '</span>' : '<span class="badge bg-light text-secondary border">Hamba Allah</span>';
+                })
+                ->addColumn('kegiatan_name', function ($row) {
+                    return $row->kegiatan ? '<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle"><i class="bi bi-calendar-check me-1"></i>' . e($row->kegiatan->nama_kegiatan) . '</span>' : '<span class="text-muted">—</span>';
+                })
+                ->addColumn('takmir_name', function ($row) {
+                    return $row->takmir ? '<span class="text-dark small"><i class="bi bi-person-circle me-1 text-muted"></i>' . e($row->takmir->nama_takmir) . '</span>' : '<span class="text-muted">—</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $editUrl = route('keuangan.edit', $row->id);
+                    $deleteUrl = route('keuangan.destroy', $row->id);
+                    $csrf = csrf_field();
+                    $deleteMethod = method_field('DELETE');
+
+                    return '
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Transaksi"><i class="bi bi-pencil"></i></a>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus transaksi ini?\')">
+                                ' . $csrf . '
+                                ' . $deleteMethod . '
+                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Transaksi"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['nominal_pemasukan', 'nominal_pengeluaran', 'donatur_name', 'kegiatan_name', 'takmir_name', 'action'])
+                ->make(true);
         }
 
-        // Pencarian berdasarkan tahun
-        if ($request->has('year') && !empty($request->year)) {
-            $query->whereRaw('DATE_FORMAT(tanggal, "%Y") = ?', [$request->input('year')]);
-        }
-
-        // Hitung total pemasukan dan pengeluaran berdasarkan periode
+        // Summary cards calculation
         $today = now()->format('Y-m-d');
-        $thisMonth = now()->format('Y-m');
         $thisYear = now()->format('Y');
 
-        $pemasukanHariIni = Keuangan::where('kategori_id_kategori', 'K1')
-            ->whereDate('tanggal', $today)
-            ->sum('nominal');
+        $pemasukanHariIni = Keuangan::where('kategori_id', 1)->whereDate('tanggal', $today)->sum('nominal');
+        $pemasukanBulanIni = Keuangan::where('kategori_id', 1)->whereYear('tanggal', now()->year)->whereMonth('tanggal', now()->month)->sum('nominal');
+        $pemasukanTahunIni = Keuangan::where('kategori_id', 1)->whereYear('tanggal', $thisYear)->sum('nominal');
 
-        $pemasukanBulanIni = Keuangan::where('kategori_id_kategori', 'K1')
-            ->whereYear('tanggal', now()->year)
-            ->whereMonth('tanggal', now()->month)
-            ->sum('nominal');
+        $pengeluaranHariIni = Keuangan::where('kategori_id', 2)->whereDate('tanggal', $today)->sum('nominal');
+        $pengeluaranBulanIni = Keuangan::where('kategori_id', 2)->whereYear('tanggal', now()->year)->whereMonth('tanggal', now()->month)->sum('nominal');
+        $pengeluaranTahunIni = Keuangan::where('kategori_id', 2)->whereYear('tanggal', $thisYear)->sum('nominal');
 
-        $pemasukanTahunIni = Keuangan::where('kategori_id_kategori', 'K1')
-            ->whereYear('tanggal', $thisYear)
-            ->sum('nominal');
-
-        $pengeluaranHariIni = Keuangan::where('kategori_id_kategori', 'K2')
-            ->whereDate('tanggal', $today)
-            ->sum('nominal');
-
-        $pengeluaranBulanIni = Keuangan::where('kategori_id_kategori', 'K2')
-            ->whereYear('tanggal', now()->year)
-            ->whereMonth('tanggal', now()->month)
-            ->sum('nominal');
-
-        $pengeluaranTahunIni = Keuangan::where('kategori_id_kategori', 'K2')
-            ->whereYear('tanggal', $thisYear)
-            ->sum('nominal');
-
-        // Hitung total pemasukan, pengeluaran, dan saldo dari seluruh data tanpa pagination.
-        $totalPemasukan = Keuangan::where('kategori_id_kategori', 'K1')->sum('nominal');
-        $totalPengeluaran = Keuangan::where('kategori_id_kategori', 'K2')->sum('nominal');
+        $totalPemasukan = Keuangan::where('kategori_id', 1)->sum('nominal');
+        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
         $totalSaldo = $totalPemasukan - $totalPengeluaran;
 
-        // 2. Tentukan Urutan Pengurutan Data
-        $query = (clone $query)->orderBy('tanggal', 'asc')->orderBy('id_keuangan', 'asc');
-        // Set pagination
-        $perPage = 3;
-        $keuangan = $query->paginate($perPage);
-
-        // HITUNG SALDO AWAL PERSIS DARI QUERY YANG SAMA
-        $currentPage = $keuangan->currentPage();
-        $offset = ($currentPage - 1) * $perPage;
-
-        if ($offset > 0) {
-            // Gunakan query yang SAMA PERSIS urutannya untuk mengambil data sebelum offset
-            $previousItems = (clone $query)->take($offset)->get();
-
-            // Hitung total saldo dari semua baris sebelum halaman ini
-            $saldoAwal = $previousItems->sum(function ($item) {
-                return $item->kategori_id_kategori === 'K1' ? $item->nominal : -$item->nominal;
-            });
-        } else {
-            $saldoAwal = 0;
-        }
-
-        // 4. Hitung statistik ringkasan
-        $totalPemasukan = Keuangan::where('kategori_id_kategori', 'K1')->sum('nominal');
-        $totalPengeluaran = Keuangan::where('kategori_id_kategori', 'K2')->sum('nominal');
-        $totalSaldo = $totalPemasukan - $totalPengeluaran;
-       // $totalKeuangan = Keuangan::count();
-        $totalKeuangan = $keuangan->total();
+        $kategoris = Kategori::all();
 
         return view('keuangan.index', compact(
-            'keuangan',
-            'saldoAwal',
-            'totalKeuangan',
+            'kategoris',
             'totalPemasukan',
             'totalPengeluaran',
             'totalSaldo',
@@ -130,98 +107,106 @@ class KeuanganController extends Controller
             'pemasukanTahunIni',
             'pengeluaranHariIni',
             'pengeluaranBulanIni',
-            'pengeluaranTahunIni',
-            'search'
+            'pengeluaranTahunIni'
         ));
     }
 
     public function create()
     {
         $kategoris = Kategori::all();
-        $donaturs = Donatur::all();
-        $kegiatans = Kegiatan::all();
-        $takmirs = Takmir::all();
-        return view('keuangan.create', compact('kategoris', 'donaturs', 'kegiatans', 'takmirs'));
+        $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
+        $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
+        
+        $totalPemasukan   = Keuangan::where('kategori_id', 1)->sum('nominal');
+        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
+        $totalSaldo       = $totalPemasukan - $totalPengeluaran;
+
+        return view('keuangan.create', compact('kategoris', 'donaturs', 'kegiatans', 'totalPemasukan', 'totalPengeluaran', 'totalSaldo'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'sumber_keuangan' => 'required|string',
-            'keterangan' => 'required|string|max:100',
-            'nominal' => 'required|integer',
-            'kategori_id_kategori' => 'required|string', 
-            'donatur_id_donatur' => 'nullable|string|size:5', // Boleh tidak diisi
-            'kegiatan_id_kegiatan' => 'nullable|string|size:4', // Boleh tidak diisi
+            'tanggal'         => 'required|date',
+            'sumber_keuangan' => 'required|string|max:255',
+            'keterangan'      => 'nullable|string|max:255',
+            'nominal'         => 'required|numeric|min:1',
+            'kategori_id'     => 'required|exists:kategori,id', 
+            'donatur_id'      => 'nullable|exists:donatur,id',
+            'kegiatan_id'     => 'nullable|exists:kegiatan,id',
+        ], [
+            'tanggal.required'         => 'Tanggal transaksi wajib diisi.',
+            'sumber_keuangan.required' => 'Nama transaksi / sumber dana wajib diisi.',
+            'nominal.required'         => 'Nominal transaksi wajib diisi.',
+            'nominal.min'              => 'Nominal minimal Rp 1.',
+            'kategori_id.required'     => 'Jenis kategori transaksi wajib dipilih.',
         ]);
 
         $data = $request->all();
-        $data['takmir_id_takmir'] = auth()->user()->id_takmir;
-
-        // Set nilai NULL jika tidak ada yang dipilih untuk donatur_id_donatur atau kegiatan_id_kegiatan
-        $data['donatur_id_donatur'] = $request->donatur_id_donatur ?: null;
-        $data['kegiatan_id_kegiatan'] = $request->kegiatan_id_kegiatan ?: null;
+        $data['takmir_id']   = auth()->id() ?? 1;
+        $data['keterangan']  = $request->keterangan ?: $request->sumber_keuangan;
+        $data['donatur_id']  = $request->donatur_id ?: null;
+        $data['kegiatan_id'] = $request->kegiatan_id ?: null;
 
         Keuangan::create($data);
 
-        return redirect()->route('keuangan.index')->with('success', 'Keuangan berhasil ditambahkan.');
+        return redirect()->route('keuangan.index')->with('success', 'Transaksi keuangan berhasil dicatat ke sistem.');
     }
-
-
 
     public function show(Keuangan $keuangan)
     {
         return view('keuangan.show', compact('keuangan'));
     }
 
-    public function edit($id_keuangan)
+    public function edit($id)
     {
-        $keuangan = Keuangan::findOrFail($id_keuangan);
+        $keuangan = Keuangan::findOrFail($id);
         $kategoris = Kategori::all();
-        $donaturs = Donatur::all();
-        $kegiatans = Kegiatan::all();
+        $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
+        $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
 
-        return view('keuangan.edit', compact('keuangan', 'kategoris', 'donaturs', 'kegiatans'));
+        $totalPemasukan   = Keuangan::where('kategori_id', 1)->sum('nominal');
+        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
+        $totalSaldo       = $totalPemasukan - $totalPengeluaran;
+
+        return view('keuangan.edit', compact('keuangan', 'kategoris', 'donaturs', 'kegiatans', 'totalPemasukan', 'totalPengeluaran', 'totalSaldo'));
     }
 
-    public function update(Request $request, $id_keuangan)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'sumber_keuangan' => 'required|string',
-            'keterangan' => 'required|string|max:100',
-            'nominal' => 'required|integer',
-            'kategori_id_kategori' => 'required|string', // Gunakan `size:2` untuk ukuran karakter 2
-            'donatur_id_donatur' => 'nullable|string|size:5', // Boleh tidak diisi
-            'kegiatan_id_kegiatan' => 'nullable|string|size:4', // Boleh tidak diisi
+            'tanggal'         => 'required|date',
+            'sumber_keuangan' => 'required|string|max:255',
+            'keterangan'      => 'nullable|string|max:255',
+            'nominal'         => 'required|numeric|min:1',
+            'kategori_id'     => 'required|exists:kategori,id',
+            'donatur_id'      => 'nullable|exists:donatur,id',
+            'kegiatan_id'     => 'nullable|exists:kegiatan,id',
+        ], [
+            'tanggal.required'         => 'Tanggal transaksi wajib diisi.',
+            'sumber_keuangan.required' => 'Nama transaksi / sumber dana wajib diisi.',
+            'nominal.required'         => 'Nominal transaksi wajib diisi.',
+            'nominal.min'              => 'Nominal minimal Rp 1.',
+            'kategori_id.required'     => 'Jenis kategori transaksi wajib dipilih.',
         ]);
 
         $data = $request->all();
-        $data['takmir_id_takmir'] = auth()->user()->id_takmir;
+        $data['takmir_id']   = auth()->id() ?? 1;
+        $data['keterangan']  = $request->keterangan ?: $request->sumber_keuangan;
+        $data['donatur_id']  = $request->donatur_id ?: null;
+        $data['kegiatan_id'] = $request->kegiatan_id ?: null;
 
-        // Set nilai NULL jika tidak ada yang dipilih untuk donatur_id_donatur atau kegiatan_id_kegiatan
-        $data['donatur_id_donatur'] = $request->donatur_id_donatur ?: null;
-        $data['kegiatan_id_kegiatan'] = $request->kegiatan_id_kegiatan ?: null;
-
-        $keuangan = Keuangan::findOrFail($id_keuangan);
+        $keuangan = Keuangan::findOrFail($id);
         $keuangan->update($data);
 
-        return redirect()->route('keuangan.index')->with('success', 'Keuangan berhasil diperbarui.');
+        return redirect()->route('keuangan.index')->with('success', 'Transaksi keuangan berhasil diperbarui.');
     }
 
-
-    public function destroy(Keuangan $keuangan)
+    public function destroy($id)
     {
+        $keuangan = Keuangan::findOrFail($id);
         $keuangan->delete();
 
-        // Hitung total saldo setelah delete
-        //$totalSaldo = Keuangan::where('takmir_id_takmir', $keuangan->takmir_id_takmir)
-          //  ->sum('pemasukan') - Keuangan::where('takmir_id_takmir', $keuangan->takmir_id_takmir)
-            //->sum('pengeluaran');
-        //$keuangan->update(['total_saldo' => $totalSaldo]);
-
         return redirect()->route('keuangan.index')->with('success', 'Keuangan berhasil dihapus.');
-        
     }
 }

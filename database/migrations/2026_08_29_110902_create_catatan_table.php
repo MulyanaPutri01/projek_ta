@@ -14,11 +14,12 @@ class CreateCatatanTable extends Migration
     public function up()
     {
         Schema::create('catatan', function (Blueprint $table) {
-            $table->char('id_catatan', 3)->primary();
-            $table->char('inventaris_id_inventaris', 3)->index('catatan_inventaris_fk');
+            $table->id();
+            $table->unsignedBigInteger('inventaris_id')->index('catatan_inventaris_fk');
             $table->date('tanggal_catatan');
-            $table->char('takmir_id_takmir', 3)->index('catatan_takmir_fk');
-            $table->char('kondisi_id_kondisi', 2)->index('catatan_kondisi_fk');
+            $table->unsignedBigInteger('kondisi_id')->index('catatan_kondisi_fk');
+            $table->unsignedBigInteger('takmir_id')->nullable()->index('catatan_takmir_fk');
+            $table->timestamps();
         });
     }
 

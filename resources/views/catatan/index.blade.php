@@ -1,124 +1,132 @@
-@section('title', 'Catatan Barang')
+@section('title', 'Catatan Kondisi Barang')
 @include('layouts.header')
 @include('layouts.sidebar')
+
 <main id="main" class="main">
-    <div class="pagetitle">
-      <h1>Catatan Kondisi Inventaris</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-          <li class="breadcrumb-item active">Catatan Barang</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
-
-    <div class="container">
-        <h1>Data Catatan Kondisi Inventaris Masjid</h1>
-        @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-        @endif
-
-        <br>
-        <!-- Formulir Pencarian -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-
-                <form method="GET" action="{{ route('catatan.index') }}" class="d-inline">
-                    <div class="d-flex flex-wrap align-items-end">
-                        <div class="me-2 mb-2">
-                            <label for="search" class="form-label black-text">Cari Lainnya : </label>
-                            <input type="text" name="search" class="form-control" placeholder="Cari..." value="{{ $search ?? '' }}">
-                        </div>
-                        <div class="me-2 mb-2">
-                            <label for="month" class="form-label black-text">Bulan :</label>
-                            <select name="month" class="form-control">
-                                <option value="">Pilih Bulan</option>
-                                @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
-                                    <option value="{{ $key }}" {{ request('month') == $key ? 'selected' : '' }}>{{ $bulan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="me-2 mb-2">
-                            <label for="year" class="form-label black-text">Tahun :</label>
-                            <select name="year" class="form-control">
-                                <option value="">Pilih Tahun</option>
-                                @foreach(range(date('Y'), date('Y') - 5) as $year)
-                                    <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <button type="submit" class="btn btn-primary">Cari</button>
-                            <a href="{{ route('catatan.index') }}" class="btn btn-secondary mt-2">Tampil Seluruh Data</a>
-                        </div>
-                        <div class="me-2 mb-2 d-flex flex-column align-items-stretch">
-                            <a href="{{ route('catatan.create') }}" class="btn btn-primary">Tambah Data</a>
-                            <a href="{{ route('kondisi.index') }}" class="btn btn-secondary mt-2">Kondisi</a>
-                        </div>
-
-                    </div>
-                </form>
-            </div>
+    <div class="pagetitle d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="fw-bold fs-3 text-dark mb-1">Catatan Kondisi Barang</h1>
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door me-1"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item active">Catatan Kondisi</li>
+                </ol>
+            </nav>
         </div>
-        <div class="card">
-            <div class="card-body">
-                <br>
-                @if($catatan->isEmpty())
-                    <div class="alert alert-danger bg-danger text-light border-0 alert-dismissible fade show" role="alert">
-                            <h5 class="text-center">Tidak ada data catatan yang dicari.</h5>
-                    </div>
-                @else
-                <div class="table-responsive" style="overflow-x: auto; max-width: 100%;">
-
-                    <table class="table table-bordered" >
-                        <thead class="sticky-top bg-white" >
-                            <tr>
-                                <th style="text-align: center;">No</th>
-                                <th style="text-align: center;">Nama Barang</th>
-                                <th style="text-align: center;">Tanggal</th>
-                                <th style="text-align: center;">Kondisi Barang</th>
-                                <!--<th style="text-align: center;">Keterangan</th>-->
-                                <th style="text-align: center;">Dibuat Oleh</th>
-                                <th style="text-align: center;">Aksi</th>
-                            </tr>
-
-                        </thead>
-                        <tbody>
-                            @foreach($catatan as $item)
-                            <tr>
-                                <td>{{ $loop->iteration + ($catatan->currentPage() - 1) * $catatan->perPage() }}</td>
-                                <td>{{ $item->nama_barang}}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal_catatan)->translatedFormat('d F Y') }}</td>
-                                <td>{{ $item->nama_kondisi}}</td>
-                               
-                                <td>{{ $item->nama_takmir }}</td>
-                                <td style="display: flex; gap: 10px; align-items: center;">
-                                    <a href="{{ route('catatan.edit', $item->id_catatan) }}" class="btn btn-warning btn-sm">Edit</a>
-                                    <form action="{{ route('catatan.destroy', $item->id_catatan) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-
-
-                    </table>
-                </div>
-                    <!-- Tombol Pagination -->
-                    {{ $catatan->withQueryString()->links() }}
-                @endif
-
-            </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('catatan.create') }}" class="btn btn-success shadow-sm"><i class="bi bi-plus-circle me-1"></i> Tambah Catatan</a>
+            <a href="{{ route('kondisi.index') }}" class="btn btn-outline-primary shadow-sm"><i class="bi bi-tags me-1"></i> Master Kondisi</a>
         </div>
     </div>
 
+    <div class="container-fluid px-0">
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+                <div>{{ session('success') }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body pt-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Filter Kondisi</label>
+                        <select id="filter_kondisi" class="form-select form-select-sm">
+                            <option value="">Semua Kondisi</option>
+                            @foreach($kondisis as $kondisi)
+                                <option value="{{ $kondisi->id }}">{{ $kondisi->nama_kondisi }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Filter Bulan</label>
+                        <select id="filter_month" class="form-select form-select-sm">
+                            <option value="">Semua Bulan</option>
+                            @foreach(['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $key => $bulan)
+                                <option value="{{ $key }}">{{ $bulan }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Filter Tahun</label>
+                        <select id="filter_year" class="form-select form-select-sm">
+                            <option value="">Semua Tahun</option>
+                            @foreach(range(date('Y'), date('Y') - 5) as $year)
+                                <option value="{{ $year }}">{{ $year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 d-flex justify-content-end gap-2 mt-3">
+                        <button id="btn_filter" class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> Filter</button>
+                        <button id="btn_reset" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body pt-4">
+                <div class="table-responsive">
+                    <table id="catatanTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Tanggal Catatan</th>
+                                <th class="text-start">Nama Barang</th>
+                                <th>Kondisi Barang</th>
+                                <th>Dicatat Oleh</th>
+                                <th style="width: 140px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
 @include('layouts.footer')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = $('#catatanTable').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: {
+                url: "{{ route('catatan.index') }}",
+                data: function (d) {
+                    d.kondisi_id = $('#filter_kondisi').val();
+                    d.month = $('#filter_month').val();
+                    d.year = $('#filter_year').val();
+                }
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                { data: 'tanggal_catatan', name: 'tanggal_catatan', className: 'text-center' },
+                { data: 'barang_name', name: 'inventaris.nama_barang' },
+                { data: 'kondisi_name', name: 'kondisi.nama_kondisi', className: 'text-center' },
+                { data: 'takmir_name', name: 'takmir.nama_takmir' },
+                { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+            ]
+        });
+
+        $('#btn_filter').click(function() {
+            table.draw();
+        });
+
+        $('#btn_reset').click(function() {
+            $('#filter_kondisi').val('');
+            $('#filter_month').val('');
+            $('#filter_year').val('');
+            table.draw();
+        });
+    });
+</script>

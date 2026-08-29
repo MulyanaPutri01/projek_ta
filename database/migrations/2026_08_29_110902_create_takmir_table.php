@@ -14,12 +14,13 @@ class CreateTakmirTable extends Migration
     public function up()
     {
         Schema::create('takmir', function (Blueprint $table) {
-            $table->char('id_takmir', 3)->primary();
-            $table->string('username', 30);
-            $table->string('password', 225);
-            $table->string('status', 10);
-            $table->char('role_id_role', 3)->index('takmir_role_fk');
-            $table->string('nama_takmir', 50);
+            $table->id();
+            $table->string('username', 50)->unique();
+            $table->string('password', 255);
+            $table->string('status', 20)->default('active');
+            $table->unsignedBigInteger('role_id')->index('takmir_role_fk');
+            $table->string('nama_takmir', 100);
+            $table->timestamps();
         });
     }
 

@@ -14,11 +14,12 @@ class CreateDonaturTable extends Migration
     public function up()
     {
         Schema::create('donatur', function (Blueprint $table) {
-            $table->char('id_donatur', 5)->primary();
-            $table->string('nama_donatur', 50);
-            $table->string('alamat', 225);
+            $table->id();
+            $table->string('nama_donatur', 100);
+            $table->string('alamat', 255);
             $table->date('tanggal');
-            $table->char('takmir_id_takmir', 3)->index('donatur_takmir_fk');
+            $table->unsignedBigInteger('takmir_id')->nullable()->index('donatur_takmir_fk');
+            $table->timestamps();
         });
     }
 

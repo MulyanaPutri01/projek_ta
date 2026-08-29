@@ -3,40 +3,63 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class Takmir extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable, HasRoles;
 
     protected $table = 'takmir';
-    protected $primaryKey = 'id_takmir';
-    public $incrementing = false;
-    public $timestamps = false;
+
+    protected $guard_name = 'web';
 
     protected $fillable = [
-        'id_takmir',
         'username',
         'password',
         'status',
-        'role_id_role',
-        'nama_takmir'];
+        'role_id',
+        'nama_takmir',
+    ];
 
-    protected $hidden = ['password'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id_role', 'id_role');
+        return $this->belongsTo(Role::class, 'role_id');
     }
-    // Relasi ke Donatur
-    public function donaturs()
-    {
-        return $this->hasMany(Donatur::class, 'takmir_id_takmir');
-    }
+
     public function keuangans()
     {
-        return $this->hasMany(Keuangan::class, 'takmir_id_takmir');
+        return $this->hasMany(Keuangan::class, 'takmir_id');
     }
-    
+
+    public function donaturs()
+    {
+        return $this->hasMany(Donatur::class, 'takmir_id');
+    }
+
+    public function catatans()
+    {
+        return $this->hasMany(Catatan::class, 'takmir_id');
+    }
+
+    public function kepanitiaans()
+    {
+        return $this->hasMany(Kepanitiaan::class, 'takmir_id');
+    }
+
+    public function galeris()
+    {
+        return $this->hasMany(Galeri::class, 'takmir_id');
+    }
+
+    public function profilMasjids()
+    {
+        return $this->hasMany(ProfilMasjid::class, 'takmir_id');
+    }
 }

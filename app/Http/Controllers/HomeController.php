@@ -3,29 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Keuangan;
-use App\Models\Kategori;
-use App\Models\Kegiatan;
-use App\Models\Donatur;
-use App\Models\Takmir;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $role = Auth::user()->role->id_role;
+        $roleName = Auth::user()?->role?->nama_role;
 
-        switch ($role) {
-            case '1':
+        switch ($roleName) {
+            case 'admin':
                 return redirect()->route('admin.dashboard');
-            case '2':
+            case 'bendahara':
                 return redirect()->route('bendahara.dashboard');
-            case '3':
+            case 'sekretaris':
                 return redirect()->route('sekretaris.dashboard');
             default:
                 return redirect('/login');
         }
-
-
     }
 }

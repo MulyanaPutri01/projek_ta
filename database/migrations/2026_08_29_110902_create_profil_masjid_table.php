@@ -14,14 +14,15 @@ class CreateProfilMasjidTable extends Migration
     public function up()
     {
         Schema::create('profil_masjid', function (Blueprint $table) {
-            $table->char('id_profil', 3)->primary();
-            $table->string('nama_masjid', 50)->nullable();
+            $table->id();
+            $table->string('nama_masjid', 100)->nullable();
             $table->text('sejarah')->nullable();
             $table->text('visi')->nullable();
             $table->text('misi')->nullable();
             $table->text('alamat')->nullable();
-            $table->char('telepon', 15)->nullable();
-            $table->char('takmir_id_takmir', 3)->index('profil_masjid_takmir_fk');
+            $table->string('telepon', 30)->nullable();
+            $table->unsignedBigInteger('takmir_id')->nullable()->index('profil_masjid_takmir_fk');
+            $table->timestamps();
         });
     }
 

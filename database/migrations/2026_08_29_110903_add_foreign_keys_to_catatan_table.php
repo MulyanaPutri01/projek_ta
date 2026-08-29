@@ -6,30 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 class AddForeignKeysToCatatanTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('catatan', function (Blueprint $table) {
-            $table->foreign(['kondisi_id_kondisi'], 'catatan_kondisi_fk')->references(['id_kondisi'])->on('kondisi');
-            $table->foreign(['inventaris_id_inventaris'], 'catatan_inventaris_fk')->references(['id_inventaris'])->on('inventaris');
-            $table->foreign(['takmir_id_takmir'], 'catatan_takmir_fk')->references(['id_takmir'])->on('takmir');
+            $table->foreign(['inventaris_id'], 'catatan_inventaris_fk')->references(['id'])->on('inventaris')->onDelete('cascade');
+            $table->foreign(['kondisi_id'], 'catatan_kondisi_fk')->references(['id'])->on('kondisi')->onDelete('cascade');
+            $table->foreign(['takmir_id'], 'catatan_takmir_fk')->references(['id'])->on('takmir')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('catatan', function (Blueprint $table) {
-            $table->dropForeign('catatan_kondisi_fk');
             $table->dropForeign('catatan_inventaris_fk');
+            $table->dropForeign('catatan_kondisi_fk');
             $table->dropForeign('catatan_takmir_fk');
         });
     }

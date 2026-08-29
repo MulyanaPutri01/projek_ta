@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Takmir;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,18 +12,23 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        return $this->loginForm();
+    }
+
+    public function loginForm()
+    {
         if (Auth::check()) {
-            // Check the user's role and redirect accordingly
-            if (Auth::user()->role->nama_role === 'admin') {
+            $role = Auth::user()?->role?->nama_role;
+            if ($role === 'admin') {
                 return redirect()->route('admin.dashboard');
-            } elseif (Auth::user()->role->nama_role === 'bendahara') {
+            } elseif ($role === 'bendahara') {
                 return redirect()->route('bendahara.dashboard');
-            } elseif (Auth::user()->role->nama_role === 'sekretaris') {
+            } elseif ($role === 'sekretaris') {
                 return redirect()->route('sekretaris.dashboard');
             }
+            return redirect()->route('dashboard');
         }
 
-        // If not authenticated, show the login form
         return view('auth.login');
     }
 
@@ -36,7 +42,12 @@ class AuthController extends Controller
         $takmir = Takmir::where('username', $request->username)->first();
 
         if ($takmir && Hash::check($request->password, $takmir->password)) {
+            if ($takmir->status !== 'active') {
+                return back()->withErrors(['username' => 'Akun Anda sedang nonaktif. Silakan hubungi admin.']);
+            }
+
             Auth::login($takmir);
+            $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
 
@@ -45,35 +56,45 @@ class AuthController extends Controller
 
     public function showRegisterForm()
     {
-        return view('auth.register');
+        return $this->registerForm();
+    }
+
+    public function registerForm()
+    {
+        $roles = Role::all();
+        return view('auth.register', compact('roles'));
     }
 
     public function register(Request $request)
     {
         $request->validate([
+            'nama_takmir' => 'required|string|max:50',
             'username' => 'required|string|max:30|unique:takmir,username',
             'password' => 'required|string|min:8|confirmed',
-            'role_id_role' => 'required|exists:role,id_role',
+            'role_id' => 'required|exists:role,id',
+        ], [
+            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
         ]);
 
         $takmir = new Takmir();
-        $takmir->id_takmir = uniqid();
         $takmir->username = $request->username;
         $takmir->password = Hash::make($request->password);
-        $takmir->role_id_role = $request->role_id_role;
-        $takmir->status = 'aktif'; // Default status
+        $takmir->role_id = $request->role_id;
+        $takmir->status = 'active'; // Default status aktif
         $takmir->nama_takmir = $request->nama_takmir;
         $takmir->save();
 
         Auth::login($takmir);
+        $request->session()->regenerate();
 
         return redirect()->route('dashboard');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
-        return redirect()->route('login'); // Redirect to login page after logout
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
     }
-
 }

@@ -2,49 +2,91 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Galeri;
+use App\Models\Kegiatan;
+use App\Models\Takmir;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
+use Yajra\DataTables\Facades\DataTables;
 
 class GaleriController extends Controller
 {
-    public function __construct(){
-        $this->middleware('role:admin');
-
+    public function __construct()
+    {
+        $this->middleware('permission:galeri-list')->only(['index', 'show']);
+        $this->middleware('permission:galeri-create')->only(['create', 'store']);
+        $this->middleware('permission:galeri-edit')->only(['edit', 'update']);
+        $this->middleware('permission:galeri-delete')->only(['destroy']);
     }
 
     public function index(Request $request)
     {
-        $search = $request->input('search', '');
+        if ($request->ajax()) {
+            $query = Galeri::with(['kegiatan', 'takmir'])->select('galeri.*');
 
-        $query = DB::table('galeri')
-            ->join('kegiatan', 'galeri.kegiatan_id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->join('takmir', 'galeri.takmir_id_takmir', '=', 'takmir.id_takmir')
-            ->select('galeri.*', 'kegiatan.nama_kegiatan','takmir.nama_takmir');
+            if ($request->filled('kegiatan_id')) {
+                $query->where('kegiatan_id', $request->kegiatan_id);
+            }
 
-        if (!empty($search)) {
-            $query->where('galeri.nama_foto', 'LIKE', "%{$search}%")
-                ->orWhere('kegiatan.nama_kegiatan', 'LIKE', "%{$search}%");
+            if ($request->filled('month')) {
+                $query->whereMonth('tanggal', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->whereYear('tanggal', $request->year);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('tanggal', function ($row) {
+                    return $row->tanggal ? Carbon::parse($row->tanggal)->format('d-m-Y') : '-';
+                })
+                ->addColumn('preview_gambar', function ($row) {
+                    if ($row->gambar && file_exists(public_path('storage/' . $row->gambar))) {
+                        return '<img src="' . asset('storage/' . $row->gambar) . '" alt="' . e($row->nama_foto) . '" class="img-thumbnail" style="max-height: 55px; border-radius: 6px;">';
+                    }
+                    return '<span class="badge bg-secondary">Tidak ada foto</span>';
+                })
+                ->editColumn('nama_foto', function ($row) {
+                    return '<strong>' . e($row->nama_foto) . '</strong>';
+                })
+                ->addColumn('kegiatan_name', function ($row) {
+                    return $row->kegiatan ? e($row->kegiatan->nama_kegiatan) : '-';
+                })
+                ->addColumn('takmir_name', function ($row) {
+                    return $row->takmir ? e($row->takmir->nama_takmir) : '-';
+                })
+                ->addColumn('action', function ($row) {
+                    $editUrl = route('galeri.edit', $row->id);
+                    $deleteUrl = route('galeri.destroy', $row->id);
+                    $csrf = csrf_field();
+                    $deleteMethod = method_field('DELETE');
+
+                    return '
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus foto ini?\')">
+                                ' . $csrf . '
+                                ' . $deleteMethod . '
+                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i> Hapus</button>
+                            </form>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['preview_gambar', 'nama_foto', 'action'])
+                ->make(true);
         }
 
-        if ($request->has('month') && !empty($request->month)) {
-            $query->whereRaw('DATE_FORMAT(galeri.tanggal, "%m") = ?', [$request->month]);
-        }
+        $kegiatans = Kegiatan::all();
+        $totalGaleri = Galeri::count();
 
-        if ($request->has('year') && !empty($request->year)) {
-            $query->whereRaw('DATE_FORMAT(galeri.tanggal, "%Y") = ?', [$request->year]);
-        }
-
-        $galeri = $query->paginate(5);
-        $totalGaleri = DB::table('galeri')->count();
-
-        return view('galeri.index', compact('galeri', 'totalGaleri', 'search'));
+        return view('galeri.index', compact('kegiatans', 'totalGaleri'));
     }
 
     public function create()
     {
-        $kegiatans = DB::table('kegiatan')->get();
-        $takmirs = DB::table('takmir')->get();
+        $kegiatans = Kegiatan::all();
+        $takmirs = Takmir::all();
         return view('galeri.create', compact('kegiatans', 'takmirs'));
     }
 
@@ -52,103 +94,85 @@ class GaleriController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'nama_foto' => 'required|max:50',
-            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'kegiatan_id_kegiatan' => 'required|exists:kegiatan,id_kegiatan',
+            'nama_foto' => 'required|max:100',
+            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'kegiatan_id' => 'required|exists:kegiatan,id',
         ]);
 
-        $lastId = DB::table('galeri')->latest('id_galeri')->first();
-        $newId = $lastId ? 'G' . str_pad((int) substr($lastId->id_galeri, 1) + 1, 2, '0', STR_PAD_LEFT) : 'G01';
-
-        // Upload gambar
-        $filePath = null; // Default nilai untuk path file
+        $filePath = null;
         if ($request->hasFile('gambar')) {
             $fileName = time() . '_' . $request->file('gambar')->getClientOriginalName();
             $filePath = 'galeri_masjid/' . $fileName;
-
-            // Simpan file ke folder public/storage/galeri_masjid
             $request->file('gambar')->move(public_path('storage/galeri_masjid'), $fileName);
         }
-        DB::table('galeri')->insert([
-            'id_galeri' => $newId,
+
+        Galeri::create([
             'tanggal' => $request->tanggal,
             'nama_foto' => $request->nama_foto,
             'gambar' => $filePath,
-            'kegiatan_id_kegiatan' => $request->kegiatan_id_kegiatan,
-            'takmir_id_takmir' => auth()->user()->id_takmir,
+            'kegiatan_id' => $request->kegiatan_id,
+            'takmir_id' => auth()->id(),
         ]);
 
         return redirect()->route('galeri.index')->with('success', 'Foto berhasil ditambahkan.');
     }
 
-    public function show($id_galeri)
+    public function show($id)
     {
-        $galeri = DB::table('galeri')
-            ->join('kegiatan', 'galeri.kegiatan_id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->select('galeri.*', 'kegiatan.nama_kegiatan')
-            ->where('galeri.id_galeri', $id_galeri)
-            ->first();
-
+        $galeri = Galeri::with(['kegiatan', 'takmir'])->findOrFail($id);
         return view('galeri.show', compact('galeri'));
     }
 
-    public function edit($id_galeri)
+    public function edit($id)
     {
-        $galeri = DB::table('galeri')->where('id_galeri', $id_galeri)->first();
-        $kegiatans = DB::table('kegiatan')->get();
+        $galeri = Galeri::findOrFail($id);
+        $kegiatans = Kegiatan::all();
 
         return view('galeri.edit', compact('galeri', 'kegiatans'));
     }
 
-    public function update(Request $request, $id_galeri)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'nama_foto' => 'required|max:50',
-            'gambar' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'kegiatan_id_kegiatan' => 'required|exists:kegiatan,id_kegiatan',
+            'nama_foto' => 'required|max:100',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'kegiatan_id' => 'required|exists:kegiatan,id',
         ]);
 
-        // 1. Ambil data galeri lama
-    $galeri = DB::table('galeri')->where('id_galeri', $id_galeri)->first();
+        $galeri = Galeri::findOrFail($id);
+        $filePath = $galeri->gambar;
 
-    // 2. Set default $filePath menggunakan nama gambar yang lama
-    $filePath = $galeri->gambar;
+        if ($request->hasFile('gambar')) {
+            if (!empty($galeri->gambar) && file_exists(public_path('storage/' . $galeri->gambar))) {
+                @unlink(public_path('storage/' . $galeri->gambar));
+            }
 
-    // 3. Jika ada file gambar baru yang diunggah
-    if ($request->hasFile('gambar')) {
-        // Hapus file gambar lama dari server jika ada
-        if (!empty($galeri->gambar) && file_exists(public_path('storage/' . $galeri->gambar))) {
-            unlink(public_path('storage/' . $galeri->gambar));
+            $fileName = time() . '_' . $request->file('gambar')->getClientOriginalName();
+            $filePath = 'galeri_masjid/' . $fileName;
+            $request->file('gambar')->move(public_path('storage/galeri_masjid'), $fileName);
         }
 
-        // Upload gambar baru
-        $fileName = time() . '_' . $request->file('gambar')->getClientOriginalName();
-        $filePath = 'galeri_masjid/' . $fileName;
-        $request->file('gambar')->move(public_path('storage/galeri_masjid'), $fileName);
+        $galeri->update([
+            'tanggal' => $request->tanggal,
+            'nama_foto' => $request->nama_foto,
+            'gambar' => $filePath,
+            'kegiatan_id' => $request->kegiatan_id,
+            'takmir_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('galeri.index')->with('success', 'Data foto berhasil diperbarui.');
     }
 
-    // 4. Update database
-    DB::table('galeri')->where('id_galeri', $id_galeri)->update([
-        'tanggal' => $request->tanggal,
-        'nama_foto' => $request->nama_foto,
-        'gambar' => $filePath, // Tetap memakai nama lama jika tidak ada unggahan baru
-        'kegiatan_id_kegiatan' => $request->kegiatan_id_kegiatan,
-        'takmir_id_takmir' => auth()->user()->id_takmir,
-    ]);
-
-    return redirect()->route('galeri.index')->with('success', 'data foto berhasil diperbarui.');
-    }
-
-    public function destroy($id_galeri)
+    public function destroy($id)
     {
-        $galeri = DB::table('galeri')->where('id_galeri', $id_galeri)->first();
+        $galeri = Galeri::findOrFail($id);
 
-        if ($galeri && !empty($galeri->gambar) && Storage::disk('public')->exists($galeri->gambar)) {
-            Storage::disk('public')->delete($galeri->gambar);
+        if (!empty($galeri->gambar) && file_exists(public_path('storage/' . $galeri->gambar))) {
+            @unlink(public_path('storage/' . $galeri->gambar));
         }
 
-        DB::table('galeri')->where('id_galeri', $id_galeri)->delete();
+        $galeri->delete();
 
         return redirect()->route('galeri.index')->with('success', 'Foto berhasil dihapus.');
     }

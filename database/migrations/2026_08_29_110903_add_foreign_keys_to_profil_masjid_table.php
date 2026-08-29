@@ -6,23 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 class AddForeignKeysToProfilMasjidTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('profil_masjid', function (Blueprint $table) {
-            $table->foreign(['takmir_id_takmir'], 'profil_masjid_takmir_fk')->references(['id_takmir'])->on('takmir');
+            $table->foreign(['takmir_id'], 'profil_masjid_takmir_fk')->references(['id'])->on('takmir')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('profil_masjid', function (Blueprint $table) {

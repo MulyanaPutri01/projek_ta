@@ -1,0 +1,367 @@
+/* ========================================================
+   Custom UI/UX Enhancement for SIMAS Masjid Al-Ikhlas
+   Enhances NiceAdmin with Modern Islamic & Professional Aesthetics
+   ======================================================== */
+
+:root {
+  --primary-color: #0d6efd;
+  --success-color: #198754;
+  --emerald-color: #0f766e;
+  --dark-navy: #0f172a;
+  --soft-bg: #f8fafc;
+  --card-radius: 12px;
+}
+
+body {
+  background-color: #f1f5f9 !important;
+  color: #334155;
+}
+
+/* --- Card Polish --- */
+.card {
+  border-radius: var(--card-radius);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.08);
+}
+
+.card-title {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 15px 0 10px 0;
+}
+
+.card-header {
+  background: transparent;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 16px 20px;
+}
+
+/* --- Sidebar Polish & Active State --- */
+.sidebar {
+  background-color: #ffffff;
+  box-shadow: 0px 0px 25px rgba(15, 23, 42, 0.06);
+  border-right: 1px solid #e2e8f0;
+}
+
+.sidebar-nav .nav-link {
+  font-weight: 600;
+  color: #475569;
+  border-radius: 8px;
+  margin: 4px 12px;
+  padding: 10px 14px;
+  transition: all 0.25s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+  background: #f1f5f9;
+  color: #0d6efd;
+}
+
+.sidebar-nav .nav-link:not(.collapsed) {
+  background: #e0e7ff;
+  color: #3730a3;
+  box-shadow: 0 2px 6px rgba(55, 48, 163, 0.08);
+}
+
+.sidebar-nav .nav-link i {
+  font-size: 1.15rem;
+  margin-right: 10px;
+  color: inherit;
+}
+
+.sidebar-nav .nav-content a {
+  padding: 8px 12px 8px 36px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav .nav-content a:hover,
+.sidebar-nav .nav-content a.active {
+  color: #0d6efd;
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.sidebar-nav .nav-content a.active i {
+  background-color: #0d6efd;
+}
+
+/* --- Header / Topbar --- */
+.header {
+  background: #ffffff;
+  box-shadow: 0px 2px 20px rgba(15, 23, 42, 0.05);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header .logo span {
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* --- Stat Info Cards --- */
+.info-card h6 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+}
+
+.info-card .card-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.card-icon.bg-success-light {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.card-icon.bg-danger-light {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+.card-icon.bg-primary-light {
+  background-color: #e0e7ff !important;
+  color: #4338ca !important;
+}
+
+.card-icon.bg-warning-light {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+.card-icon.bg-info-light {
+  background-color: #cffafe !important;
+  color: #0e7490 !important;
+}
+
+/* --- Form Controls & Inputs --- */
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.92rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-label {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.88rem;
+  margin-bottom: 0.35rem;
+}
+
+/* --- Buttons --- */
+.btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: #1d4ed8;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-color: #15803d;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-color: #b91c1c;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: #d97706;
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  color: #ffffff;
+}
+
+/* --- Soft Badges --- */
+.badge {
+  padding: 0.45em 0.75em;
+  font-weight: 600;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.badge.bg-success {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0;
+}
+
+.badge.bg-danger {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fecaca;
+}
+
+.badge.bg-primary {
+  background-color: #e0e7ff !important;
+  color: #3730a3 !important;
+  border: 1px solid #c7d2fe;
+}
+
+.badge.bg-info {
+  background-color: #cffafe !important;
+  color: #155e75 !important;
+  border: 1px solid #a5f3fc;
+}
+
+.badge.bg-warning {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a;
+}
+
+.badge.bg-secondary {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0;
+}
+
+/* --- DataTables Polish --- */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+  margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+.page-item.active .page-link {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.page-link {
+  border-radius: 6px;
+  margin: 0 2px;
+  color: #475569;
+  font-weight: 500;
+}
+
+table.dataTable {
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table.dataTable thead th {
+  background-color: #f8fafc !important;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #cbd5e1 !important;
+  padding: 12px 14px;
+}
+
+table.dataTable tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+table.dataTable tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* --- Welcome Hero Banner in Dashboard --- */
+.dashboard-welcome-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f766e 100%);
+  color: #ffffff;
+  border-radius: var(--card-radius);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.2);
+}
+
+.dashboard-welcome-banner h2 {
+  color: #ffffff;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.dashboard-welcome-banner p {
+  color: #e2e8f0;
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* --- Modal Polish --- */
+.modal-content {
+  border-radius: 14px;
+  border: none;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 18px 24px;
+  background: #f8fafc;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.modal-body {
+  padding: 24px;
+}

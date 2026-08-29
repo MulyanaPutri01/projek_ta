@@ -14,17 +14,18 @@ class CreateKegiatanTable extends Migration
     public function up()
     {
         Schema::create('kegiatan', function (Blueprint $table) {
-            $table->char('id_kegiatan', 2)->primary();
-            $table->string('nama_kegiatan', 20);
+            $table->id();
+            $table->string('nama_kegiatan', 150);
             $table->date('tanggal');
             $table->time('mulai_kegiatan');
             $table->time('akhir_kegiatan');
-            $table->string('nama_waktu', 30);
-            $table->string('pembicara', 30);
-            $table->string('nama_khotib', 30);
-            $table->string('nama_muadzin', 30);
-            $table->string('tempat', 30);
-            $table->string('audience', 30);
+            $table->string('nama_waktu', 50)->nullable();
+            $table->string('pembicara', 100)->nullable();
+            $table->string('nama_khotib', 100)->nullable();
+            $table->string('nama_muadzin', 100)->nullable();
+            $table->string('tempat', 100);
+            $table->string('audience', 100)->nullable();
+            $table->timestamps();
         });
     }
 

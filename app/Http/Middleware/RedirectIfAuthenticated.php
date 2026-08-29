@@ -23,7 +23,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                $role = Auth::user()->role->nama_role;
+                $role = Auth::user()?->role?->nama_role;
 
                 // Redirect based on role
                 switch ($role) {
@@ -33,6 +33,8 @@ class RedirectIfAuthenticated
                         return redirect()->route('bendahara.dashboard');
                     case 'sekretaris':
                         return redirect()->route('sekretaris.dashboard');
+                    default:
+                        return redirect('/dashboard');
                 }
             }
         }

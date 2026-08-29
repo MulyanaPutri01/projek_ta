@@ -6,26 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 class AddForeignKeysToKeuanganTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('keuangan', function (Blueprint $table) {
-            $table->foreign(['kategori_id_kategori'], 'keuangan_kategori_fk')->references(['id_kategori'])->on('kategori');
-            $table->foreign(['takmir_id_takmir'], 'keuangan_takmir_fk')->references(['id_takmir'])->on('takmir');
-            $table->foreign(['donatur_id_donatur'], 'keuangan_donatur_fk')->references(['id_donatur'])->on('donatur');
-            $table->foreign(['kegiatan_id_kegiatan'], 'keuangan_kegiatan_fk')->references(['id_kegiatan'])->on('kegiatan');
+            $table->foreign(['kategori_id'], 'keuangan_kategori_fk')->references(['id'])->on('kategori')->onDelete('cascade');
+            $table->foreign(['takmir_id'], 'keuangan_takmir_fk')->references(['id'])->on('takmir')->onDelete('set null');
+            $table->foreign(['donatur_id'], 'keuangan_donatur_fk')->references(['id'])->on('donatur')->onDelete('set null');
+            $table->foreign(['kegiatan_id'], 'keuangan_kegiatan_fk')->references(['id'])->on('kegiatan')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('keuangan', function (Blueprint $table) {

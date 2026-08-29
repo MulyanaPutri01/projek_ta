@@ -6,23 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 class AddForeignKeysToTakmirTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('takmir', function (Blueprint $table) {
-            $table->foreign(['role_id_role'], 'takmir_role_fk')->references(['id_role'])->on('role');
+            $table->foreign(['role_id'], 'takmir_role_fk')->references(['id'])->on('role')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('takmir', function (Blueprint $table) {

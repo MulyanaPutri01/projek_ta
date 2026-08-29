@@ -14,8 +14,9 @@ class CreateKondisiTable extends Migration
     public function up()
     {
         Schema::create('kondisi', function (Blueprint $table) {
-            $table->char('id_kondisi', 2)->primary();
-            $table->string('nama_kondisi', 15);
+            $table->id();
+            $table->string('nama_kondisi', 50);
+            $table->timestamps();
         });
     }
 

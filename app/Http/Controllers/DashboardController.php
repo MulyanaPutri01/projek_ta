@@ -9,17 +9,19 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect('/login');
+        }
 
-        $role = Auth::user()?->role->nama_role;
-
-        if ($role == 'admin') {
+        if ($user->hasRole('admin') || $user->can('user-list') || $user->can('role-list')) {
             return redirect()->route('admin.dashboard');
-        } elseif ($role == 'bendahara') {
+        } elseif ($user->hasRole('bendahara') || $user->can('keuangan-list')) {
             return redirect()->route('bendahara.dashboard');
-        } elseif ($role == 'sekretaris') {
+        } elseif ($user->hasRole('sekretaris') || $user->can('kegiatan-list') || $user->can('inventaris-list')) {
             return redirect()->route('sekretaris.dashboard');
         }
 
-        return redirect('/login');
+        return redirect()->route('admin.dashboard');
     }
 }

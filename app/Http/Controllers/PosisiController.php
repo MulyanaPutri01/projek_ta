@@ -4,28 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\Posisi;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class PosisiController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:posisi-manage');
+    }
+
     public function index(Request $request)
     {
-        $query = Posisi::query();
+        if ($request->ajax()) {
+            $query = Posisi::query();
 
-        // Pencarian berdasarkan nama Posisi
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->input('search');
-            $query->where('nama_posisi', 'LIKE', "%{$search}%");
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('nama_posisi', function ($row) {
+                    return '<strong>' . e($row->nama_posisi) . '</strong>';
+                })
+                ->addColumn('action', function ($row) {
+                    $deleteUrl = route('posisi.destroy', $row->id);
+                    $csrf = csrf_field();
+                    $deleteMethod = method_field('DELETE');
+
+                    return '
+                        <div class="d-flex justify-content-center gap-1">
+                            <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="' . $row->id . '" data-nama="' . e($row->nama_posisi) . '"><i class="bi bi-pencil"></i> Edit</button>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin?\')">
+                                ' . $csrf . '
+                                ' . $deleteMethod . '
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                            </form>
+                        </div>
+                    ';
+                })
+                ->rawColumns(['nama_posisi', 'action'])
+                ->make(true);
         }
 
-
-        // Pagination
-        $posisis = $query->paginate(5); // Mengambil 10 Posisi per halaman
-
-        // Jumlah semua data
-        $totalPosisi = Posisi::count();
-
-
-        return view('posisi.index', compact('posisis', 'totalPosisi', 'query'));
+        return view('posisi.index');
     }
 
     public function create()
@@ -46,19 +64,19 @@ class PosisiController extends Controller
         return redirect()->route('posisi.index')->with('success', 'Posisi berhasil ditambahkan');
     }
 
-    public function edit($id_posisi)
+    public function edit($id)
     {
-        $posisi = Posisi::findOrFail($id_posisi);
+        $posisi = Posisi::findOrFail($id);
         return view('posisi.edit', compact('posisi'));
     }
 
-    public function update(Request $request, $id_posisi)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_posisi' => 'required|string|max:100', // Sesuaikan dengan kebutuhan Anda
+            'nama_posisi' => 'required|string|max:100',
         ]);
 
-        $posisi = Posisi::findOrFail($id_posisi);
+        $posisi = Posisi::findOrFail($id);
         $posisi->update([
             'nama_posisi' => $request->nama_posisi,
         ]);
@@ -66,13 +84,11 @@ class PosisiController extends Controller
         return redirect()->route('posisi.index')->with('success', 'Posisi berhasil diperbarui');
     }
 
-
-    public function destroy($id_posisi)
+    public function destroy($id)
     {
-        $posisi = Posisi::findOrFail($id_posisi);
+        $posisi = Posisi::findOrFail($id);
         $posisi->delete();
 
-        return redirect()->route('posisi.index');
+        return redirect()->route('posisi.index')->with('success', 'Posisi berhasil dihapus');
     }
 }
-
