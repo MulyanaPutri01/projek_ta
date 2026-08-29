@@ -1,0 +1,132 @@
+@section('title', 'Laporan Keuangan')
+@include('layouts.header')
+@include('layouts.sidebar')
+<main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Laporan</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+          <li class="breadcrumb-item active">Laporan</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+<div class="container">
+    <h1>Laporan Keuangan</h1>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <form method="GET" action="{{ route('laporan.keuangan') }}" class="d-inline">
+                <div class="d-flex flex-wrap align-items-end">
+                    <div class="me-2 mb-2">
+                        <label for="filter" class="form-label black-text">Pilih Jenis Laporan :</label>
+                        <select name="filter" class="form-select">
+                            <option value="">Pilih Laporan</option>
+                            <option value="tahunan" {{ request('filter') == 'tahunan' ? 'selected' : '' }}>Tahunan</option>
+                            <option value="bulanan" {{ request('filter') == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
+                            <option value="periode" {{ request('filter') == 'periode' ? 'selected' : '' }}>Periode Tanggal</option>
+                        </select>
+                    </div>
+                    <div class="me-2 mb-2">
+                        <label for="year" class="form-label black-text">Tahun : </label>
+                        <input type="text" name="year" class="form-control" placeholder="Ketik 2024" value="{{ request('year') }}">
+                    </div>
+                    <div class="me-2 mb-2">
+                        <label for="month" class="form-label black-text">Bulan : </label>
+                        <select name="month" class="form-select">
+                            <option value="">Pilih Bulan</option>
+                            <option value="1" {{ request('month') == '1' ? 'selected' : '' }}>Januari</option>
+                            <option value="2" {{ request('month') == '2' ? 'selected' : '' }}>Februari</option>
+                            <option value="3" {{ request('month') == '3' ? 'selected' : '' }}>Maret</option>
+                            <option value="4" {{ request('month') == '4' ? 'selected' : '' }}>April</option>
+                            <option value="5" {{ request('month') == '5' ? 'selected' : '' }}>Mei</option>
+                            <option value="6" {{ request('month') == '6' ? 'selected' : '' }}>Juni</option>
+                            <option value="7" {{ request('month') == '7' ? 'selected' : '' }}>Juli</option>
+                            <option value="8" {{ request('month') == '8' ? 'selected' : '' }}>Agustus</option>
+                            <option value="9" {{ request('month') == '9' ? 'selected' : '' }}>September</option>
+                            <option value="10" {{ request('month') == '10' ? 'selected' : '' }}>Oktober</option>
+                            <option value="11" {{ request('month') == '11' ? 'selected' : '' }}>November</option>
+                            <option value="12" {{ request('month') == '12' ? 'selected' : '' }}>Desember</option>
+                        </select>
+                    </div>
+                    <div class="me-2 mb-2">
+                        <label for="start_date" class="form-label black-text">Periode Tanggal Awal : </label>
+                        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                    </div>
+                    <div class="me-2 mb-2">
+                        <label for="end_date" class="form-label black-text">Periode Tanggal Akhir : </label>
+                        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                    </div>
+                    <div class="me-2 mb-2">
+                        <button type="submit" class="btn btn-primary">Tampilkan</button>
+                    </div>
+                    <div class="me-2 mb-2">
+                        <a href="{{ route('laporan.pdf', request()->all()) }}" class="btn btn-success">Cetak Laporan</a>
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <br>
+            <div class="table-responsive" style="overflow-x: auto; max-width: 100%;">
+                <table class="table table-bordered" >
+                    <thead class="sticky-top bg-white" >
+                        <tr>
+                            <th style="text-align: center;">No</th>
+                            <th style="text-align: center;">Tanggal</th>
+                            <th style="text-align: center;">Sumber Keuangan</th>
+                            <th style="text-align: center;">Keterangan</th>
+                            <th style="text-align: center;">Nominal</th>
+                            <th style="text-align: center;">Nama Donatur</th>
+                            <th style="text-align: center;">Nama Kegiatan</th>
+                            <th style="text-align: center;">Pemasukan</th>
+                            <th style="text-align: center;">Pengeluaran</th>
+                            <th style="text-align: center;">Total Saldo</th>
+
+                        </tr>
+
+                    </thead>
+                    <tbody>
+                        @php
+                            $totalPemasukan = 0;
+                            $totalPengeluaran = 0;
+                            $saldoAkhir = 0;
+                        @endphp
+                        @foreach($keuangan as $item)
+                        <tr>
+                            <td>{{ $loop->iteration}}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</td>
+                            <td>{{ $item->sumber_keuangan }}</td>
+                            <td>{{ $item->keterangan }}</td>
+                            <td>{{ $item->nominal }}</td>
+                            <td>{{ $item->donatur_id_donatur ? $item->donatur->nama_donatur : '-' }}</td>
+                            <td>{{ $item->kegiatan_id_kegiatan ? $item->kegiatan->nama_kegiatan : '-' }}</td>
+
+                            <td><span style="white-space: nowrap;">Rp{{ number_format($item->kategori_id_kategori === 'D' ? $item->nominal : 0, 0, ',', '.') }}</span></td>
+                            <td><span style="white-space: nowrap;">Rp{{ number_format($item->kategori_id_kategori === 'K' ? $item->nominal : 0, 0, ',', '.') }}</span></td>
+
+                            @php
+                                if ($item->kategori_id_kategori === 'D') {
+                                    $totalPemasukan += $item->nominal;
+                                } elseif ($item->kategori_id_kategori === 'K') {
+                                    $totalPengeluaran += $item->nominal;
+                                }
+                                $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+                            @endphp
+                            <td><span style="white-space: nowrap;">Rp{{ number_format($saldoAkhir, 0, ',', '.') }}</span></td>
+
+                        </tr>
+                        @endforeach
+                    </tbody>
+
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@include('layouts.footer')
