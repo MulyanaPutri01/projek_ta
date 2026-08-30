@@ -22,62 +22,69 @@ class AdminController extends Controller
     {
         $currentYear = date('Y');
 
-        // Ringkasan Keuangan Total
-        $totalPemasukan = (int) Keuangan::where('kategori_id', 1)->sum('nominal');
-        $totalPengeluaran = (int) Keuangan::where('kategori_id', 2)->sum('nominal');
-        $totalSaldo = $totalPemasukan - $totalPengeluaran;
+        // 1. Ringkasan Keuangan Total dalam 1 query agregat
+        $keuanganStats = Keuangan::selectRaw("
+            SUM(CASE WHEN kategori_id = 1 THEN nominal ELSE 0 END) as total_pemasukan,
+            SUM(CASE WHEN kategori_id = 2 THEN nominal ELSE 0 END) as total_pengeluaran
+        ")->first();
 
-        // Stat Counter
-        $countTakmir = Takmir::count();
-        $countDonatur = Donatur::count();
-        $countKegiatan = Kegiatan::count();
+        $totalPemasukan   = (int) ($keuanganStats->total_pemasukan ?? 0);
+        $totalPengeluaran = (int) ($keuanganStats->total_pengeluaran ?? 0);
+        $totalSaldo       = $totalPemasukan - $totalPengeluaran;
+
+        // 2. Stat Counter
+        $countTakmir     = Takmir::count();
+        $countDonatur    = Donatur::count();
+        $countKegiatan   = Kegiatan::count();
         $countInventaris = Inventaris::count();
-        $countUser = User::count();
+        $countUser       = User::count();
 
-        // 12 Bulan Trend Chart Data
-        $months = [
-            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
-            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
-            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
-        ];
+        // 3. 12 Bulan Trend Chart Data (Agregasi SQL instan)
+        $chartMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $chartPemasukan = array_fill(0, 12, 0);
+        $chartPengeluaran = array_fill(0, 12, 0);
+        $chartSaldo = array_fill(0, 12, 0);
 
-        $transaksiTahunIni = Keuangan::whereYear('tanggal', $currentYear)->get();
-        $chartMonths = array_values($months);
-        $chartPemasukan = [];
-        $chartPengeluaran = [];
-        $chartSaldo = [];
+        $monthlyTotals = Keuangan::selectRaw("MONTH(tanggal) as bulan, kategori_id, SUM(nominal) as total")
+            ->whereYear('tanggal', $currentYear)
+            ->groupBy('bulan', 'kategori_id')
+            ->get();
 
-        foreach ($months as $num => $label) {
-            $masuk = (int) $transaksiTahunIni->filter(function($item) use ($num) {
-                return Carbon::parse($item->tanggal)->format('m') === $num && $item->kategori_id == 1;
-            })->sum('nominal');
-
-            $keluar = (int) $transaksiTahunIni->filter(function($item) use ($num) {
-                return Carbon::parse($item->tanggal)->format('m') === $num && $item->kategori_id == 2;
-            })->sum('nominal');
-
-            $chartPemasukan[] = $masuk;
-            $chartPengeluaran[] = $keluar;
-            $chartSaldo[] = ($masuk - $keluar);
+        foreach ($monthlyTotals as $row) {
+            $monthIndex = (int) $row->bulan - 1;
+            if ($monthIndex >= 0 && $monthIndex < 12) {
+                if ($row->kategori_id == 1) {
+                    $chartPemasukan[$monthIndex] = (int) $row->total;
+                } elseif ($row->kategori_id == 2) {
+                    $chartPengeluaran[$monthIndex] = (int) $row->total;
+                }
+            }
         }
 
-        // Komposisi Pengeluaran Terbanyak
+        for ($i = 0; $i < 12; $i++) {
+            $chartSaldo[$i] = $chartPemasukan[$i] - $chartPengeluaran[$i];
+        }
+
+        // 4. Komposisi Pengeluaran Terbanyak (SQL Group By langsung)
         $topPengeluaran = Keuangan::where('kategori_id', 2)
             ->whereYear('tanggal', $currentYear)
-            ->get()
+            ->selectRaw("sumber_keuangan, SUM(nominal) as total")
             ->groupBy('sumber_keuangan')
-            ->map(fn($group) => (int) $group->sum('nominal'))
-            ->sortDesc()
-            ->take(5);
+            ->orderByDesc('total')
+            ->take(5)
+            ->pluck('total', 'sumber_keuangan');
 
         $pengeluaranLabels = $topPengeluaran->keys()->toArray();
-        $pengeluaranValues = $topPengeluaran->values()->toArray();
+        $pengeluaranValues = $topPengeluaran->values()->map(fn($v) => (int)$v)->toArray();
 
-        // Kondisi Inventaris Breakdown
-        $allInventaris = Inventaris::with('catatans.kondisi')->get();
+        // 5. Kondisi Inventaris Breakdown
+        $allInventaris = Inventaris::with(['catatans' => function($q) {
+            $q->latest('tanggal_catatan')->with('kondisi:id,nama_kondisi');
+        }])->get(['id']);
+
         $kondisiInventaris = ['Baik' => 0, 'Perbaikan' => 0, 'Rusak' => 0];
         foreach ($allInventaris as $item) {
-            $latest = $item->catatans->sortByDesc('tanggal_catatan')->first();
+            $latest = $item->catatans->first();
             $kName = $latest && $latest->kondisi ? $latest->kondisi->nama_kondisi : 'Baik';
             $kLower = strtolower($kName);
             if (str_contains($kLower, 'rusak')) {
@@ -89,8 +96,10 @@ class AdminController extends Controller
             }
         }
 
-        $keuangan = Keuangan::with(['kategori', 'donatur', 'kegiatan', 'takmir'])
+        // 6. Transaksi Terbaru dengan Eager Loading
+        $keuangan = Keuangan::with(['kategori:id,nama_kategori', 'donatur:id,nama_donatur', 'kegiatan:id,nama_kegiatan', 'takmir:id,nama_takmir'])
             ->orderBy('tanggal', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('admin.dashboard', compact(

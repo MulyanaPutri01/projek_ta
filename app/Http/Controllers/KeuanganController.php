@@ -24,7 +24,12 @@ class KeuanganController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Keuangan::with(['kategori', 'donatur', 'kegiatan', 'takmir'])->select('keuangan.*');
+            $query = Keuangan::with([
+                'kategori:id,nama_kategori',
+                'donatur:id,nama_donatur',
+                'kegiatan:id,nama_kegiatan',
+                'takmir:id,nama_takmir'
+            ])->select('keuangan.*');
 
             if ($request->filled('kategori_id')) {
                 $query->where('kategori_id', $request->kategori_id);
@@ -75,25 +80,45 @@ class KeuanganController extends Controller
                         </div>
                     ';
                 })
+                ->filterColumn('donatur_name', function ($query, $keyword) {
+                    $query->whereHas('donatur', function ($q) use ($keyword) {
+                        $q->where('nama_donatur', 'like', "%{$keyword}%");
+                    });
+                })
+                ->filterColumn('kegiatan_name', function ($query, $keyword) {
+                    $query->whereHas('kegiatan', function ($q) use ($keyword) {
+                        $q->where('nama_kegiatan', 'like', "%{$keyword}%");
+                    });
+                })
                 ->rawColumns(['nominal_pemasukan', 'nominal_pengeluaran', 'donatur_name', 'kegiatan_name', 'takmir_name', 'action'])
                 ->make(true);
         }
 
-        // Summary cards calculation
-        $today = now()->format('Y-m-d');
-        $thisYear = now()->format('Y');
+        // Summary cards calculation: 1 single SQL conditional aggregation (8 queries -> 1 query)
+        $today = now()->toDateString();
+        $thisMonth = (int) now()->month;
+        $thisYear = (int) now()->year;
 
-        $pemasukanHariIni = Keuangan::where('kategori_id', 1)->whereDate('tanggal', $today)->sum('nominal');
-        $pemasukanBulanIni = Keuangan::where('kategori_id', 1)->whereYear('tanggal', now()->year)->whereMonth('tanggal', now()->month)->sum('nominal');
-        $pemasukanTahunIni = Keuangan::where('kategori_id', 1)->whereYear('tanggal', $thisYear)->sum('nominal');
+        $summary = Keuangan::selectRaw("
+            SUM(CASE WHEN kategori_id = 1 THEN nominal ELSE 0 END) as total_pemasukan,
+            SUM(CASE WHEN kategori_id = 2 THEN nominal ELSE 0 END) as total_pengeluaran,
+            SUM(CASE WHEN kategori_id = 1 AND tanggal = ? THEN nominal ELSE 0 END) as pemasukan_hari_ini,
+            SUM(CASE WHEN kategori_id = 2 AND tanggal = ? THEN nominal ELSE 0 END) as pengeluaran_hari_ini,
+            SUM(CASE WHEN kategori_id = 1 AND YEAR(tanggal) = ? AND MONTH(tanggal) = ? THEN nominal ELSE 0 END) as pemasukan_bulan_ini,
+            SUM(CASE WHEN kategori_id = 2 AND YEAR(tanggal) = ? AND MONTH(tanggal) = ? THEN nominal ELSE 0 END) as pengeluaran_bulan_ini,
+            SUM(CASE WHEN kategori_id = 1 AND YEAR(tanggal) = ? THEN nominal ELSE 0 END) as pemasukan_tahun_ini,
+            SUM(CASE WHEN kategori_id = 2 AND YEAR(tanggal) = ? THEN nominal ELSE 0 END) as pengeluaran_tahun_ini
+        ", [$today, $today, $thisYear, $thisMonth, $thisYear, $thisMonth, $thisYear, $thisYear])->first();
 
-        $pengeluaranHariIni = Keuangan::where('kategori_id', 2)->whereDate('tanggal', $today)->sum('nominal');
-        $pengeluaranBulanIni = Keuangan::where('kategori_id', 2)->whereYear('tanggal', now()->year)->whereMonth('tanggal', now()->month)->sum('nominal');
-        $pengeluaranTahunIni = Keuangan::where('kategori_id', 2)->whereYear('tanggal', $thisYear)->sum('nominal');
-
-        $totalPemasukan = Keuangan::where('kategori_id', 1)->sum('nominal');
-        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
-        $totalSaldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan      = (float) ($summary->total_pemasukan ?? 0);
+        $totalPengeluaran    = (float) ($summary->total_pengeluaran ?? 0);
+        $totalSaldo          = $totalPemasukan - $totalPengeluaran;
+        $pemasukanHariIni    = (float) ($summary->pemasukan_hari_ini ?? 0);
+        $pengeluaranHariIni  = (float) ($summary->pengeluaran_hari_ini ?? 0);
+        $pemasukanBulanIni   = (float) ($summary->pemasukan_bulan_ini ?? 0);
+        $pengeluaranBulanIni = (float) ($summary->pengeluaran_bulan_ini ?? 0);
+        $pemasukanTahunIni   = (float) ($summary->pemasukan_tahun_ini ?? 0);
+        $pengeluaranTahunIni = (float) ($summary->pengeluaran_tahun_ini ?? 0);
 
         $kategoris = Kategori::all();
 
@@ -117,8 +142,13 @@ class KeuanganController extends Controller
         $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
         $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
         
-        $totalPemasukan   = Keuangan::where('kategori_id', 1)->sum('nominal');
-        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
+        $stats = Keuangan::selectRaw("
+            SUM(CASE WHEN kategori_id = 1 THEN nominal ELSE 0 END) as total_pemasukan,
+            SUM(CASE WHEN kategori_id = 2 THEN nominal ELSE 0 END) as total_pengeluaran
+        ")->first();
+
+        $totalPemasukan   = (float) ($stats->total_pemasukan ?? 0);
+        $totalPengeluaran = (float) ($stats->total_pengeluaran ?? 0);
         $totalSaldo       = $totalPemasukan - $totalPengeluaran;
 
         return view('keuangan.create', compact('kategoris', 'donaturs', 'kegiatans', 'totalPemasukan', 'totalPengeluaran', 'totalSaldo'));
@@ -165,8 +195,13 @@ class KeuanganController extends Controller
         $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
         $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
 
-        $totalPemasukan   = Keuangan::where('kategori_id', 1)->sum('nominal');
-        $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
+        $stats = Keuangan::selectRaw("
+            SUM(CASE WHEN kategori_id = 1 THEN nominal ELSE 0 END) as total_pemasukan,
+            SUM(CASE WHEN kategori_id = 2 THEN nominal ELSE 0 END) as total_pengeluaran
+        ")->first();
+
+        $totalPemasukan   = (float) ($stats->total_pemasukan ?? 0);
+        $totalPengeluaran = (float) ($stats->total_pengeluaran ?? 0);
         $totalSaldo       = $totalPemasukan - $totalPengeluaran;
 
         return view('keuangan.edit', compact('keuangan', 'kategoris', 'donaturs', 'kegiatans', 'totalPemasukan', 'totalPengeluaran', 'totalSaldo'));
@@ -186,7 +221,6 @@ class KeuanganController extends Controller
             'tanggal.required'         => 'Tanggal transaksi wajib diisi.',
             'sumber_keuangan.required' => 'Nama transaksi / sumber dana wajib diisi.',
             'nominal.required'         => 'Nominal transaksi wajib diisi.',
-            'nominal.min'              => 'Nominal minimal Rp 1.',
             'kategori_id.required'     => 'Jenis kategori transaksi wajib dipilih.',
         ]);
 
@@ -207,6 +241,6 @@ class KeuanganController extends Controller
         $keuangan = Keuangan::findOrFail($id);
         $keuangan->delete();
 
-        return redirect()->route('keuangan.index')->with('success', 'Keuangan berhasil dihapus.');
+        return redirect()->route('keuangan.index')->with('success', 'Transaksi keuangan berhasil dihapus.');
     }
 }

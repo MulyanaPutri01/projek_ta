@@ -87,6 +87,13 @@ class PosisiController extends Controller
     public function destroy($id)
     {
         $posisi = Posisi::findOrFail($id);
+
+        // Cegah hapus jika posisi masih digunakan oleh anggota kepanitiaan
+        if ($posisi->kepanitiaans()->exists()) {
+            return redirect()->route('posisi.index')
+                ->with('error', 'Posisi tidak dapat dihapus karena masih digunakan pada data kepanitiaan.');
+        }
+
         $posisi->delete();
 
         return redirect()->route('posisi.index')->with('success', 'Posisi berhasil dihapus');

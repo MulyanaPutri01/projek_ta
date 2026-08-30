@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Catatan;
 use App\Models\Kondisi;
+use App\Models\ProfilMasjid;
 use Yajra\DataTables\Facades\DataTables;
 
 class InventarisController extends Controller
@@ -23,7 +24,9 @@ class InventarisController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Inventaris::with(['catatans.kondisi'])->select('inventaris.*');
+            $query = Inventaris::with(['catatans' => function($q) {
+                $q->latest('tanggal_catatan')->with('kondisi:id,nama_kondisi');
+            }])->select('inventaris.*');
 
             if ($request->filled('lokasi')) {
                 $query->where('lokasi', 'like', '%' . $request->lokasi . '%');
@@ -49,7 +52,7 @@ class InventarisController extends Controller
                     return '<div><i class="bi bi-geo-alt-fill text-danger me-1"></i><span class="fw-semibold text-dark">' . e($row->lokasi) . '</span></div>';
                 })
                 ->addColumn('kondisi_terakhir', function ($row) {
-                    $latest = $row->catatans->sortByDesc('tanggal_catatan')->first();
+                    $latest = $row->catatans->first();
                     if ($latest && $latest->kondisi) {
                         $kondisiName = strtolower($latest->kondisi->nama_kondisi);
                         if (str_contains($kondisiName, 'baik') || str_contains($kondisiName, 'bagus') || str_contains($kondisiName, 'normal')) {
@@ -85,8 +88,9 @@ class InventarisController extends Controller
                 ->make(true);
         }
 
-        $totalJenis = Inventaris::count();
-        $totalUnit = Inventaris::sum('jumlah');
+        $stats = Inventaris::selectRaw("COUNT(*) as total_jenis, SUM(jumlah) as total_unit")->first();
+        $totalJenis = (int) ($stats->total_jenis ?? 0);
+        $totalUnit = (int) ($stats->total_unit ?? 0);
         $lokasiList = Inventaris::select('lokasi')->distinct()->whereNotNull('lokasi')->pluck('lokasi');
 
         return view('inventaris.index', compact('totalJenis', 'totalUnit', 'lokasiList'));
@@ -162,53 +166,33 @@ class InventarisController extends Controller
         return redirect()->route('inventaris.index')->with('success', 'Barang inventaris berhasil dihapus.');
     }
 
-    public function exportPdf(Request $request)
+    public function exportPdf()
     {
-        $query = Inventaris::with(['catatans.kondisi']);
+        $inventariss = Inventaris::with(['catatans' => function($q) {
+            $q->latest('tanggal_catatan')->with('kondisi:id,nama_kondisi');
+        }])->orderBy('nama_barang', 'asc')->get();
 
-        if ($request->filled('lokasi')) {
-            $query->where('lokasi', 'like', '%' . $request->lokasi . '%');
-        }
+        $stats = Inventaris::selectRaw("COUNT(*) as total_jenis, SUM(jumlah) as total_unit")->first();
+        $totalJenis = (int) ($stats->total_jenis ?? 0);
+        $totalUnit = (int) ($stats->total_unit ?? 0);
+        $profil = ProfilMasjid::first();
 
-        if ($request->filled('tahun')) {
-            $query->where('tahun_pembelian', $request->tahun);
-        }
-
-        $inventariss = $query->get();
-        $totalJenis = $inventariss->count();
-        $totalUnit = $inventariss->sum('jumlah');
-
-        $profil = \App\Models\ProfilMasjid::first();
         $ketuaTakmir = \App\Models\Takmir::whereHas('role', function($q) {
-            $q->where('nama_role', 'like', '%ketua%')->orWhere('nama_role', 'like', '%admin%');
+            $q->where('nama_role', 'like', '%admin%')->orWhere('nama_role', 'like', '%ketua%');
         })->first() ?? \App\Models\Takmir::first();
 
         $sekretaris = \App\Models\Takmir::whereHas('role', function($q) {
             $q->where('nama_role', 'like', '%sekretaris%');
         })->first() ?? \App\Models\Takmir::skip(1)->first() ?? $ketuaTakmir;
 
-        $paper = strtolower($request->get('paper', 'a4'));
-        $orientation = strtolower($request->get('orientation', 'landscape'));
-
-        if (!in_array($orientation, ['portrait', 'landscape'])) {
-            $orientation = 'landscape';
-        }
+        $orientation = 'landscape';
 
         $pdf = Pdf::loadView('inventaris.pdf', compact(
-            'inventariss', 'totalJenis', 'totalUnit', 'profil', 'ketuaTakmir', 'sekretaris',
-            'paper', 'orientation'
+            'inventariss', 'totalJenis', 'totalUnit',
+            'profil', 'ketuaTakmir', 'sekretaris', 'orientation'
         ));
+        $pdf->setPaper('a4', $orientation);
 
-        if ($paper === 'f4' || $paper === 'folio') {
-            // Standar F4 / Folio Indonesia: 215mm x 330mm = 609.45pt x 935.43pt
-            $pdf->setPaper([0, 0, 609.45, 935.43], $orientation);
-        } else {
-            $pdf->setPaper('a4', $orientation);
-        }
-
-        $namaFile = 'Laporan_Inventaris_' . ($profil->nama_masjid ? str_replace(' ', '_', $profil->nama_masjid) : 'Masjid') . '_' . $paper . '_' . $orientation . '_' . date('Ymd_His') . '.pdf';
-
-        return $pdf->stream($namaFile);
+        return $pdf->stream('Laporan_Inventaris_Masjid_' . date('Ymd_His') . '.pdf');
     }
 }
-

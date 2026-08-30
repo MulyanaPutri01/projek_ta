@@ -77,6 +77,19 @@ class KategoriController extends Controller
     public function destroy($id)
     {
         $kategori = Kategori::findOrFail($id);
+
+        // Proteksi kategori sistem (Pemasukan & Pengeluaran) — penghapusan akan merusak seluruh data keuangan
+        if (in_array($kategori->id, [1, 2])) {
+            return redirect()->route('kategori.index')
+                ->with('error', 'Kategori bawaan sistem (Pemasukan / Pengeluaran) tidak boleh dihapus.');
+        }
+
+        // Cegah hapus jika masih ada transaksi yang terhubung
+        if ($kategori->keuangans()->exists()) {
+            return redirect()->route('kategori.index')
+                ->with('error', 'Kategori tidak dapat dihapus karena masih memiliki data transaksi terkait.');
+        }
+
         $kategori->delete();
 
         return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus.');

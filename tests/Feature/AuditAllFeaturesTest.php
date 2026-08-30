@@ -8,6 +8,9 @@ use App\Models\Kegiatan;
 use App\Models\ProfilMasjid;
 use App\Models\Donatur;
 use App\Models\Keuangan;
+use App\Models\Kategori;
+use App\Models\Kondisi;
+use App\Models\Posisi;
 
 class AuditAllFeaturesTest extends TestCase
 {
@@ -43,6 +46,18 @@ class AuditAllFeaturesTest extends TestCase
         $this->get('/api/kegiatan')->assertStatus(200);
         $this->get('/login')->assertStatus(200);
         $this->get('/register')->assertStatus(200);
+    }
+
+    /** Test optimized landing page (no 24-query loop) */
+    public function test_landing_page_loads_correctly()
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertViewHas('chartPemasukan');
+        $response->assertViewHas('chartPengeluaran');
+        $response->assertViewHas('chartMonths');
+        $response->assertViewHas('totalPemasukan');
+        $response->assertViewHas('totalSaldo');
     }
 
     /** Test Admin Dashboard & Modules */
@@ -87,6 +102,25 @@ class AuditAllFeaturesTest extends TestCase
         }
     }
 
+    /** Test Admin Dashboard has optimized chart data */
+    public function test_admin_dashboard_optimized_queries()
+    {
+        if (!$this->adminUser) {
+            $this->markTestSkipped('No admin user found');
+        }
+
+        $this->actingAs($this->adminUser);
+
+        $response = $this->get('/admin-dashboard');
+        $response->assertStatus(200);
+        $response->assertViewHas('chartPemasukan');
+        $response->assertViewHas('chartPengeluaran');
+        $response->assertViewHas('chartSaldo');
+        $response->assertViewHas('pengeluaranLabels');
+        $response->assertViewHas('totalPemasukan');
+        $response->assertViewHas('totalSaldo');
+    }
+
     /** Test Bendahara Dashboard & Permissions */
     public function test_bendahara_dashboard()
     {
@@ -96,7 +130,11 @@ class AuditAllFeaturesTest extends TestCase
 
         $this->actingAs($this->bendaharaUser);
 
-        $this->get('/bendahara-dashboard')->assertStatus(200);
+        $response = $this->get('/bendahara-dashboard');
+        $response->assertStatus(200);
+        $response->assertViewHas('chartPemasukan');
+        $response->assertViewHas('pemasukanLabels');
+        $response->assertViewHas('pengeluaranLabels');
         $this->get('/keuangan')->assertStatus(200);
         $this->get('/donatur')->assertStatus(200);
         $this->get('/laporan-keuangan')->assertStatus(200);
@@ -111,7 +149,10 @@ class AuditAllFeaturesTest extends TestCase
 
         $this->actingAs($this->sekretarisUser);
 
-        $this->get('/sekretaris-dashboard')->assertStatus(200);
+        $response = $this->get('/sekretaris-dashboard');
+        $response->assertStatus(200);
+        $response->assertViewHas('chartKegiatan');
+        $response->assertViewHas('kondisiInventaris');
         $this->get('/kegiatan')->assertStatus(200);
         $this->get('/kepanitiaan')->assertStatus(200);
         $this->get('/catatan')->assertStatus(200);
@@ -217,6 +258,12 @@ class AuditAllFeaturesTest extends TestCase
             $landingResponse->assertSee('Takmir Masjid Jami Al-Ikhlas');
             $landingResponse->assertSee('Salurkan Infaq Terbaik Anda');
         }
+
+        // 4. Test Kategori system protection (ID 1 & 2 must not be deletable)
+        $deleteKategori = $this->delete('/kategori/1');
+        $deleteKategori->assertRedirect('/kategori');
+        $kategori1 = Kategori::find(1);
+        $this->assertNotNull($kategori1, 'Kategori ID 1 (Pemasukan) harus tidak terhapus!');
 
         // Cleanup test data
         $this->delete("/keuangan/{$keuangan->id}");

@@ -20,35 +20,35 @@ class SekretarisController extends Controller
     {
         $currentYear = date('Y');
 
-        $totalKegiatan = Kegiatan::count();
-        $totalInventaris = Inventaris::count();
+        $totalKegiatan    = Kegiatan::count();
+        $totalInventaris  = Inventaris::count();
         $totalKepanitiaan = Kepanitiaan::count();
-        $totalTakmir = Takmir::count();
+        $totalTakmir      = Takmir::count();
 
-        // 12 Bulan Agenda Kegiatan
-        $months = [
-            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
-            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
-            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
-        ];
+        // 1. 12 Bulan Agenda Kegiatan (Agregasi SQL instan)
+        $chartMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $chartKegiatan = array_fill(0, 12, 0);
 
-        $kegiatanTahunIni = Kegiatan::whereYear('tanggal', $currentYear)->get();
-        $chartMonths = array_values($months);
-        $chartKegiatan = [];
+        $kegiatanMonthly = Kegiatan::whereYear('tanggal', $currentYear)
+            ->selectRaw("MONTH(tanggal) as bulan, COUNT(*) as total")
+            ->groupBy('bulan')
+            ->get();
 
-        foreach ($months as $num => $label) {
-            $count = $kegiatanTahunIni->filter(function($item) use ($num) {
-                return Carbon::parse($item->tanggal)->format('m') === $num;
-            })->count();
-
-            $chartKegiatan[] = $count;
+        foreach ($kegiatanMonthly as $row) {
+            $monthIndex = (int) $row->bulan - 1;
+            if ($monthIndex >= 0 && $monthIndex < 12) {
+                $chartKegiatan[$monthIndex] = (int) $row->total;
+            }
         }
 
-        // Kondisi Inventaris Breakdown
-        $allInventaris = Inventaris::with('catatans.kondisi')->get();
+        // 2. Kondisi Inventaris Breakdown
+        $allInventaris = Inventaris::with(['catatans' => function($q) {
+            $q->latest('tanggal_catatan')->with('kondisi:id,nama_kondisi');
+        }])->get(['id']);
+
         $kondisiInventaris = ['Baik' => 0, 'Perbaikan' => 0, 'Rusak' => 0];
         foreach ($allInventaris as $item) {
-            $latest = $item->catatans->sortByDesc('tanggal_catatan')->first();
+            $latest = $item->catatans->first();
             $kName = $latest && $latest->kondisi ? $latest->kondisi->nama_kondisi : 'Baik';
             $kLower = strtolower($kName);
             if (str_contains($kLower, 'rusak')) {

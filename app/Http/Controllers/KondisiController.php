@@ -87,6 +87,13 @@ class KondisiController extends Controller
     public function destroy($id)
     {
         $kondisi = Kondisi::findOrFail($id);
+
+        // Cegah hapus jika kondisi masih digunakan pada catatan inventaris
+        if ($kondisi->catatans()->exists()) {
+            return redirect()->route('kondisi.index')
+                ->with('error', 'Kondisi tidak dapat dihapus karena masih digunakan pada catatan inventaris.');
+        }
+
         $kondisi->delete();
 
         return redirect()->route('kondisi.index')->with('success', 'Kondisi berhasil dihapus');
