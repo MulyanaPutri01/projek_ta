@@ -21,6 +21,7 @@
                 <p>Pantau ringkasan statistik kas masjid, grafik arus kas bulanan, kondisi aset inventaris, dan aktivitas sistem secara real-time.</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('display.index') }}" target="_blank" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm"><i class="bi bi-tv me-1"></i> Buka TV Display</a>
                 <a href="{{ route('takmir.create') }}" class="btn btn-light btn-sm text-primary fw-bold"><i class="bi bi-person-plus me-1"></i> Tambah Takmir</a>
                 <a href="{{ route('galeri.create') }}" class="btn btn-outline-light btn-sm fw-bold"><i class="bi bi-camera me-1"></i> Upload Foto</a>
             </div>

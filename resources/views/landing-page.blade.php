@@ -1251,6 +1251,10 @@
                                 class="btn btn-success btn-lg px-4 py-2.5 rounded-pill shadow-lg fw-semibold d-inline-flex align-items-center gap-2">
                                 <i class="bi bi-wallet2 fs-5"></i> Laporan Kas Publik
                             </a>
+                            <a href="{{ route('display.index') }}" target="_blank"
+                                class="btn btn-warning btn-lg px-4 py-2.5 rounded-pill shadow-lg fw-semibold d-inline-flex align-items-center gap-2 text-dark">
+                                <i class="bi bi-tv fs-5"></i> Mode TV Masjid
+                            </a>
                             <a href="#kegiatan"
                                 class="btn btn-outline-light btn-lg px-4 py-2.5 rounded-pill shadow-sm fw-semibold d-inline-flex align-items-center gap-2">
                                 <i class="bi bi-calendar3 fs-5"></i> Agenda Kegiatan

@@ -64,8 +64,13 @@
 
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
+                <li class="nav-item me-2 d-none d-sm-inline-block">
+                    <a href="{{ route('display.index') }}" class="btn btn-outline-primary btn-sm rounded-pill shadow-sm" target="_blank" title="Buka Mode Layar TV Digital Masjid">
+                        <i class="bi bi-tv me-1"></i> Mode TV Display
+                    </a>
+                </li>
                 <li class="nav-item me-3">
-                    <a href="{{ route('home') }}" class="btn btn-outline-success btn-sm rounded-pill" target="_blank">
+                    <a href="{{ route('home') }}" class="btn btn-outline-success btn-sm rounded-pill shadow-sm" target="_blank">
                         <i class="bi bi-globe me-1"></i> Lihat Website
                     </a>
                 </li>

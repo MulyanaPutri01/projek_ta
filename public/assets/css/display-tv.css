@@ -1,0 +1,713 @@
+/* ==========================================================================
+   Mosque Digital Signage / Mode TV Display Masjid (display-tv.css)
+   Designed for 16:9 1080p/4K TV Kiosks & Wall Monitors
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --tv-bg-gradient: radial-gradient(circle at 50% 0%, #064e3b 0%, #022c22 45%, #051614 100%);
+    --tv-glass-bg: rgba(6, 78, 59, 0.45);
+    --tv-glass-border: rgba(52, 211, 153, 0.25);
+    --tv-accent-emerald: #10b981;
+    --tv-accent-gold: #f59e0b;
+    --tv-accent-cyan: #06b6d4;
+    --tv-text-light: #f8fafc;
+    --tv-text-muted: #94a3b8;
+    --tv-font-main: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    --tv-font-arabic: 'Amiri', serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--tv-bg-gradient);
+    color: var(--tv-text-light);
+    font-family: var(--tv-font-main);
+    cursor: default;
+}
+
+/* Base Display Canvas (16:9 layout) */
+.tv-display-container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    padding: 18px 24px 14px 24px;
+    background: transparent;
+    position: relative;
+    justify-content: space-between;
+}
+
+/* Glassmorphism Panel Class */
+.tv-glass {
+    background: var(--tv-glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--tv-glass-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   1. HEADER SECTION
+   ========================================================================== */
+.tv-header {
+    height: 95px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid rgba(52, 211, 153, 0.4);
+}
+
+.tv-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tv-logo-icon {
+    width: 58px;
+    height: 58px;
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.85rem;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.tv-mosque-name {
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    line-height: 1.2;
+}
+
+.tv-mosque-address {
+    font-size: 0.88rem;
+    color: var(--tv-text-muted);
+    font-weight: 400;
+}
+
+.tv-header-center {
+    text-align: center;
+}
+
+.tv-calendar-badge {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    padding: 8px 22px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tv-date-masehi {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.tv-date-divider {
+    color: var(--tv-accent-emerald);
+    font-size: 1.1rem;
+}
+
+.tv-date-hijri {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--tv-accent-gold);
+    font-family: var(--tv-font-arabic), serif;
+}
+
+.tv-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tv-clock-box {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(6, 78, 59, 0.7) 100%);
+    border: 1.5px solid rgba(52, 211, 153, 0.5);
+    padding: 6px 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.tv-clock-time {
+    font-size: 2.35rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+
+.tv-clock-seconds {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--tv-accent-gold);
+    min-width: 28px;
+}
+
+/* ==========================================================================
+   2. MAIN BODY SECTION (Left Stage & Right Schedule Grid)
+   ========================================================================== */
+.tv-main-grid {
+    display: grid;
+    grid-template-columns: 63% calc(37% - 16px);
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 16px;
+}
+
+/* --- Left Stage (Dynamic Carousel) --- */
+.tv-stage-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    padding: 22px;
+}
+
+.tv-carousel-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.tv-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease-in-out, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.97);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tv-slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    z-index: 2;
+}
+
+/* Slide Header Badge */
+.tv-slide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16, 185, 129, 0.25);
+    border: 1px solid var(--tv-accent-emerald);
+    color: #6ee7b7;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 6px 16px;
+    border-radius: 50px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    align-self: flex-start;
+}
+
+/* Slide 1: Agenda Kegiatan */
+.tv-kegiatan-card {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    transition: transform 0.3s ease;
+}
+
+.tv-kegiatan-datebox {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 70px;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.tv-kegiatan-date-day {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.tv-kegiatan-date-month {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Slide 2: Petugas Sholat Jumat */
+.tv-petugas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    height: calc(100% - 50px);
+}
+
+.tv-petugas-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1.5px solid rgba(52, 211, 153, 0.25);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tv-petugas-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.tv-petugas-khotib .tv-petugas-icon { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+.tv-petugas-imam .tv-petugas-icon { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+.tv-petugas-muadzin .tv-petugas-icon { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid #06b6d4; }
+.tv-petugas-bilal .tv-petugas-icon { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+
+/* Slide 3: Kas & Rekening Donasi */
+.tv-kas-hero {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1.5px solid rgba(52, 211, 153, 0.4);
+    border-radius: 18px;
+    padding: 22px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.tv-kas-amount {
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: #34d399;
+    letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+}
+
+/* Slide 4: Galeri Foto */
+.tv-galeri-frame {
+    width: 100%;
+    height: calc(100% - 50px);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.tv-galeri-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tv-galeri-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, transparent 100%);
+}
+
+/* Slide 5: Hadits & Mutiara Hikmah */
+.tv-hadits-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1.5px solid rgba(245, 158, 11, 0.3);
+    border-radius: 18px;
+    padding: 24px 30px;
+    height: calc(100% - 50px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.tv-hadits-arabic {
+    font-family: var(--tv-font-arabic), serif;
+    font-size: 1.85rem;
+    color: #fef08a;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    direction: rtl;
+}
+
+.tv-hadits-translation {
+    font-size: 1.12rem;
+    color: #f1f5f9;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+/* Carousel Indicators */
+.tv-carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tv-indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.tv-indicator-dot.active {
+    width: 32px;
+    border-radius: 10px;
+    background: var(--tv-accent-emerald);
+    box-shadow: 0 0 10px var(--tv-accent-emerald);
+}
+
+/* --- Right Side: Prayer Times & Countdown --- */
+.tv-schedule-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 18px 20px;
+}
+
+/* Next Prayer Hero Badge */
+.tv-next-prayer-hero {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(6, 78, 59, 0.4) 100%);
+    border: 1.5px solid var(--tv-accent-emerald);
+    border-radius: 16px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+.tv-next-prayer-label {
+    font-size: 0.88rem;
+    color: #a7f3d0;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.tv-next-prayer-name {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.tv-next-countdown {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: var(--tv-accent-gold);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* Prayer Schedule Cards Stack */
+.tv-prayer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex: 1;
+    justify-content: space-around;
+}
+
+.tv-prayer-card {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.tv-prayer-card.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(4, 120, 87, 0.45) 100%);
+    border: 1.5px solid var(--tv-accent-emerald);
+    transform: scale(1.03);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+}
+
+.tv-prayer-card.active::before {
+    content: '▶';
+    position: absolute;
+    left: 6px;
+    color: var(--tv-accent-gold);
+    font-size: 0.75rem;
+    animation: pulse 1.5s infinite;
+}
+
+.tv-prayer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tv-prayer-icon {
+    font-size: 1.25rem;
+    color: var(--tv-text-muted);
+}
+
+.tv-prayer-card.active .tv-prayer-icon {
+    color: var(--tv-accent-gold);
+}
+
+.tv-prayer-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.tv-prayer-card.active .tv-prayer-name {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.tv-prayer-time {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
+
+.tv-prayer-card.active .tv-prayer-time {
+    color: var(--tv-accent-gold);
+    font-size: 1.45rem;
+}
+
+/* ==========================================================================
+   3. BOTTOM RUNNING TEXT (MARQUEE)
+   ========================================================================== */
+.tv-bottom-bar {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.tv-marquee-label {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    z-index: 2;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.tv-marquee-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.tv-marquee-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 35s linear infinite;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* ==========================================================================
+   4. FULLSCREEN OVERLAYS (Adzan, Iqomah & Shaf Mode)
+   ========================================================================== */
+.tv-fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(2, 44, 34, 0.96);
+    backdrop-filter: blur(25px);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    animation: fadeIn 0.6s ease;
+}
+
+.tv-fullscreen-overlay.active {
+    display: flex;
+}
+
+.tv-alert-icon {
+    font-size: 5.5rem;
+    color: var(--tv-accent-gold);
+    margin-bottom: 20px;
+    animation: bounce 1.5s infinite;
+}
+
+.tv-alert-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.tv-alert-subtitle {
+    font-size: 1.5rem;
+    color: #a7f3d0;
+    margin-bottom: 30px;
+}
+
+.tv-iqomah-countdown-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 3px solid var(--tv-accent-gold);
+    border-radius: 28px;
+    padding: 20px 50px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.35);
+}
+
+.tv-iqomah-timer {
+    font-size: 5.5rem;
+    font-weight: 900;
+    color: var(--tv-accent-gold);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.tv-progress-bar-container {
+    width: 500px;
+    max-width: 80vw;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.tv-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
+    width: 100%;
+    transition: width 1s linear;
+}
+
+/* ==========================================================================
+   5. FLOATING CONTROLS (Fullscreen, Audio, & Preview Simulator)
+   ========================================================================== */
+.tv-floating-tools {
+    position: fixed;
+    bottom: 24px;
+    right: 30px;
+    display: flex;
+    gap: 8px;
+    opacity: 0.35;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.tv-floating-tools:hover {
+    opacity: 1;
+}
+
+.tv-btn-tool {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.tv-btn-tool:hover {
+    background: var(--tv-accent-emerald);
+    color: #022c22;
+    transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}

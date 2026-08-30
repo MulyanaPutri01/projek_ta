@@ -22,6 +22,7 @@ use App\Http\Controllers\KondisiController;
 use App\Http\Controllers\ProfilMasjidController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\DisplayMasjidController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,4 +141,10 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
 Route::get('/api/kegiatan', [KegiatanController::class, 'getEvents'])->name('kegiatan.api');
 Route::get('/kegiatan-calendar', [KegiatanController::class, 'publicCalendar'])->name('kegiatan.calendar');
 Route::get('/inventaris-pdf', [InventarisController::class, 'exportPdf'])->name('inventaris.pdf');
+
+// Digital Signage / Mode TV Display Masjid
+Route::get('/display', [DisplayMasjidController::class, 'index'])->name('display.index');
+Route::get('/tv-masjid', [DisplayMasjidController::class, 'index'])->name('display.tv');
+Route::get('/api/display-data', [DisplayMasjidController::class, 'apiData'])->name('display.api');
+
 
