@@ -15,7 +15,7 @@
     <!-- Mode TV Display Broadcast-Grade Stylesheet -->
     <link rel="stylesheet" href="{{ asset('assets/css/display-tv.css') }}">
 </head>
-<body class="theme-emerald">
+<body class="{{ $settings['theme'] ?? 'theme-emerald' }}">
 
     <!-- Background Pattern & Ambient Lighting -->
     <div class="tv-geometric-pattern"></div>
@@ -697,11 +697,12 @@
             }
         }
 
+        const slideIntervalDuration = {{ ($settings['slide_interval'] ?? 8) * 1000 }};
         function startCarousel() {
             if (carouselInterval) clearInterval(carouselInterval);
             carouselInterval = setInterval(() => {
                 showSlide(currentSlide + 1);
-            }, 8000);
+            }, slideIntervalDuration);
         }
         startCarousel();
 

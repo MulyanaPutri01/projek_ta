@@ -133,6 +133,10 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
     Route::middleware('permission:galeri-list|galeri-create|galeri-edit|galeri-delete')->group(function () {
         Route::resource('galeri', GaleriController::class);
     });
+
+    // Smart TV Digital Signage Settings
+    Route::get('smart-tv/setting', [DisplayMasjidController::class, 'setting'])->name('admin.display.setting');
+    Route::post('smart-tv/setting', [DisplayMasjidController::class, 'updateSetting'])->name('admin.display.update');
 });
 
 // -------------------------------------------------------------

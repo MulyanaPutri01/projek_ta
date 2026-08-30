@@ -1095,6 +1095,8 @@
 </head>
 
 <body class="index-page">
+    <!-- Global Reading Scroll Progress Bar -->
+    <div id="scrollProgressBar" class="scroll-progress-bar"></div>
 
     <header id="header" class="header sticky-top">
 
@@ -1235,7 +1237,7 @@
                 <div class="row align-items-center gy-5">
                     <!-- Left Column: Welcome & Info -->
                     <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
-                        <div class="bismillah-badge arabic-font mb-3 shadow-sm">
+                        <div class="bismillah-badge arabic-font mb-3 shadow-sm animate-float-slow">
                             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                         </div>
                         <h1 class="hero-title mb-3">
@@ -1276,13 +1278,13 @@
                                         <div>
                                             <div class="stat-label">Saldo Kas Terbuka</div>
                                             <h4 class="stat-value text-warning">Rp
-                                                {{ number_format($totalSaldo, 0, ',', '.') }}</h4>
+                                                <span class="count-up-number" data-target="{{ $totalSaldo }}">{{ number_format($totalSaldo, 0, ',', '.') }}</span></h4>
                                         </div>
                                     </div>
                                     <div
                                         class="stat-subtext d-flex justify-content-between pt-2 border-top border-white border-opacity-10">
                                         <span class="text-success fw-semibold"><i class="bi bi-arrow-down-left"></i>
-                                            Masuk: Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</span>
+                                            Masuk: Rp <span class="count-up-number" data-target="{{ $totalPemasukan }}">{{ number_format($totalPemasukan, 0, ',', '.') }}</span></span>
                                     </div>
                                 </div>
                             </div>
@@ -1297,7 +1299,7 @@
                                         </div>
                                         <div>
                                             <div class="stat-label">Agenda Dakwah</div>
-                                            <h4 class="stat-value">{{ $totalKegiatan }} <small
+                                            <h4 class="stat-value"><span class="count-up-number" data-target="{{ $totalKegiatan }}">{{ $totalKegiatan }}</span> <small
                                                     class="fs-6 fw-normal text-white-50">Kegiatan</small></h4>
                                         </div>
                                     </div>
@@ -1318,7 +1320,7 @@
                                         </div>
                                         <div>
                                             <div class="stat-label">Pengurus Takmir</div>
-                                            <h4 class="stat-value">{{ $totalTakmir }} <small
+                                            <h4 class="stat-value"><span class="count-up-number" data-target="{{ $totalTakmir }}">{{ $totalTakmir }}</span> <small
                                                     class="fs-6 fw-normal text-white-50">Takmir</small></h4>
                                         </div>
                                     </div>
@@ -1339,7 +1341,7 @@
                                         </div>
                                         <div>
                                             <div class="stat-label">Sarana & Inventaris</div>
-                                            <h4 class="stat-value">{{ $totalInventaris }} <small
+                                            <h4 class="stat-value"><span class="count-up-number" data-target="{{ $totalInventaris }}">{{ $totalInventaris }}</span> <small
                                                     class="fs-6 fw-normal text-white-50">Barang</small></h4>
                                         </div>
                                     </div>
@@ -3648,6 +3650,72 @@
                 console.error('Copy failed: ', err);
             });
         }
+
+        // ========================================================
+        // Next-Level Visuals Engine (Scroll Progress & Odometer)
+        // ========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Reading Scroll Progress Bar
+            const progressBar = document.getElementById('scrollProgressBar');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                if (scrollHeight > 0 && progressBar) {
+                    const scrollPercent = (scrollTop / scrollHeight) * 100;
+                    progressBar.style.width = scrollPercent + '%';
+                }
+            }, { passive: true });
+
+            // 2. Animated Number Odometer Counter Engine
+            const countElements = document.querySelectorAll('.count-up-number');
+            const observerOptions = {
+                threshold: 0.25,
+                rootMargin: '0px 0px -40px 0px'
+            };
+
+            const countUpObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const targetEl = entry.target;
+                        const targetValue = parseFloat(targetEl.getAttribute('data-target') || 0);
+                        animateValue(targetEl, 0, targetValue, 1800);
+                        observer.unobserve(targetEl);
+                    }
+                });
+            }, observerOptions);
+
+            countElements.forEach(el => countUpObserver.observe(el));
+
+            function animateValue(element, start, end, duration) {
+                let startTimestamp = null;
+                const isCurrency = end > 999;
+
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    // Smooth easeOutExpo curve
+                    const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                    const currentVal = Math.floor(easeProgress * (end - start) + start);
+
+                    if (isCurrency) {
+                        element.innerText = currentVal.toLocaleString('id-ID');
+                    } else {
+                        element.innerText = currentVal;
+                    }
+
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        if (isCurrency) {
+                            element.innerText = end.toLocaleString('id-ID');
+                        } else {
+                            element.innerText = end;
+                        }
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+        });
     </script>
 
 </body>

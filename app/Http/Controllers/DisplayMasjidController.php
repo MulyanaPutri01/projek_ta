@@ -9,11 +9,68 @@ use App\Models\Kegiatan;
 use App\Models\Galeri;
 use App\Models\Takmir;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class DisplayMasjidController extends Controller
 {
+    /**
+     * Get saved settings with robust fallback defaults
+     */
+    protected function getSettings()
+    {
+        $defaultSettings = [
+            'theme' => 'theme-emerald',
+            'slide_interval' => 8,
+            'petugas_jumat' => [
+                'khotib'  => 'Ustadz H. Ahmad Fauzi, Lc.',
+                'imam'    => 'Ustadz M. Syarifuddin, S.Pd.I',
+                'muadzin' => 'Ustadz Bilal Ramadhan',
+                'bilal'   => 'Ustadz Ridwan Al-Hafidz',
+                'tema'    => 'Menjaga Keikhlasan & Kemakmuran Masjid',
+            ],
+            'iqomah_duration' => [
+                'subuh'   => 10,
+                'dzuhur'  => 10,
+                'ashar'   => 8,
+                'maghrib' => 7,
+                'isya'    => 10,
+                'jumat'   => 15,
+            ],
+            'running_texts' => [
+                'Selamat datang di Masjid Al-Ikhlas • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kesucian rumah Allah.',
+                'Infaq & Sedekah Pembangunan: Bank Syariah Indonesia No. Rek: 1234567890 a.n Takmir Masjid (Scan QRIS pada layar TV).',
+                'Peringatan Ibadah: Harap menonaktifkan atau mengubah mode senyap pada nada dering handphone (HP) saat berada di ruang sholat.'
+            ]
+        ];
+
+        if (Storage::disk('local')->exists('display_settings.json')) {
+            try {
+                $saved = json_decode(Storage::disk('local')->get('display_settings.json'), true);
+                if (is_array($saved)) {
+                    return array_merge($defaultSettings, $saved);
+                }
+            } catch (\Exception $e) {
+                // Return defaults if json is invalid
+            }
+        }
+
+        return $defaultSettings;
+    }
+
+    /**
+     * Save settings to storage
+     */
+    protected function saveSettings(array $data)
+    {
+        Storage::disk('local')->put('display_settings.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Main Display View for Smart TV
+     */
     public function index()
     {
+        $settings = $this->getSettings();
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
@@ -51,17 +108,16 @@ class DisplayMasjidController extends Controller
             ->take(6)
             ->get();
 
-        // 5. Petugas Sholat & Khutbah Jumat Pekan Ini
-        $takmirs = Takmir::where('status', 'active')->orderBy('id', 'asc')->get();
-        
-        $petugasJumat = [
-            'khotib'  => $takmirs->skip(0)->first()?->nama_takmir ?? 'Ustadz Tamu / Takmir Masjid',
-            'imam'    => $takmirs->skip(1)->first()?->nama_takmir ?? ($takmirs->first()?->nama_takmir ?? 'Imam Rawatib Masjid'),
-            'muadzin' => $takmirs->skip(2)->first()?->nama_takmir ?? ($takmirs->skip(1)->first()?->nama_takmir ?? 'Muadzin Masjid'),
-            'bilal'   => $takmirs->skip(3)->first()?->nama_takmir ?? ($takmirs->first()?->nama_takmir ?? 'Petugas Bilal'),
+        // 5. Petugas Sholat & Khutbah Jumat
+        $petugasJumat = $settings['petugas_jumat'] ?? [
+            'khotib'  => 'Ustadz H. Ahmad Fauzi, Lc.',
+            'imam'    => 'Ustadz M. Syarifuddin, S.Pd.I',
+            'muadzin' => 'Ustadz Bilal Ramadhan',
+            'bilal'   => 'Ustadz Ridwan Al-Hafidz',
+            'tema'    => 'Menjaga Keikhlasan & Kemakmuran Masjid'
         ];
 
-        // 6. Kumpulan Mutiara Hadits & Doa
+        // 6. Kumpulan Mutiara Hadits
         $haditsList = [
             [
                 'arab' => 'مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ',
@@ -109,7 +165,7 @@ class DisplayMasjidController extends Controller
             ]
         ];
 
-        // 8. Info Cuaca & Koordinat Lokasi (Default Karangmulya, Tegal)
+        // 8. Info Cuaca & Lokasi
         $weatherInfo = [
             'temp'      => '28°C',
             'condition' => 'Cerah Berawan',
@@ -119,16 +175,15 @@ class DisplayMasjidController extends Controller
         ];
 
         // 9. Running Text Pengumuman
-        $runningTexts = [
-            'Selamat datang di ' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . ' • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kesucian rumah Allah.',
-            'Laporan Kas Terkini: Total Saldo Kas Rp ' . number_format($totalSaldo, 0, ',', '.') . ' (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ') • Transparan, Amanah, & Akuntabel.',
-            'Infaq & Sedekah Pembangunan: ' . ($profil->nama_bank ?? 'Bank Syariah Indonesia') . ' No. Rek: ' . ($profil->nomor_rekening ?? '1234567890') . ' a.n ' . ($profil->atas_nama ?? 'Takmir Masjid') . ' (Scan QRIS pada layar slide).',
-            'Peringatan Ibadah: Harap menonaktifkan atau mengubah mode senyap pada nada dering handphone (HP) saat berada di ruang utama sholat.',
+        $runningTexts = !empty($settings['running_texts']) ? $settings['running_texts'] : [
+            'Selamat datang di ' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . ' • Mari makmurkan masjid dengan shalat berjamaah.',
+            'Laporan Kas: Saldo Kas Rp ' . number_format($totalSaldo, 0, ',', '.') . ' (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ').',
+            'Harap menonaktifkan nada dering handphone (HP) saat berada di dalam ruang utama sholat.'
         ];
 
         if ($kegiatans->isNotEmpty()) {
             $firstKegiatan = $kegiatans->first();
-            $runningTexts[] = 'Agenda Terdekat: ' . $firstKegiatan->nama_kegiatan . ' (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . ($firstKegiatan->waktu ?? '09:00') . ' WIB) • Lokasi: ' . ($firstKegiatan->lokasi ?? 'Ruang Utama Masjid');
+            $runningTexts[] = 'Agenda Terdekat: ' . $firstKegiatan->nama_kegiatan . ' (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . ($firstKegiatan->waktu ?? '09:00') . ' WIB)';
         }
 
         return view('display.index', compact(
@@ -144,8 +199,58 @@ class DisplayMasjidController extends Controller
             'haditsList',
             'dzikirList',
             'weatherInfo',
-            'runningTexts'
+            'runningTexts',
+            'settings'
         ));
+    }
+
+    /**
+     * Admin Setting Page for Smart TV
+     */
+    public function setting()
+    {
+        $settings = $this->getSettings();
+        $takmirs = Takmir::where('status', 'active')->orderBy('nama_takmir', 'asc')->get();
+        $profil = ProfilMasjid::first();
+
+        return view('admin.display.setting', compact('settings', 'takmirs', 'profil'));
+    }
+
+    /**
+     * Update Smart TV Settings
+     */
+    public function updateSetting(Request $request)
+    {
+        $runningTexts = array_filter(array_map('trim', explode("\n", $request->input('running_texts_raw', ''))));
+
+        $data = [
+            'theme' => $request->input('theme', 'theme-emerald'),
+            'slide_interval' => (int) $request->input('slide_interval', 8),
+            'petugas_jumat' => [
+                'khotib'  => $request->input('khotib', 'Ustadz H. Ahmad Fauzi, Lc.'),
+                'imam'    => $request->input('imam', 'Ustadz M. Syarifuddin, S.Pd.I'),
+                'muadzin' => $request->input('muadzin', 'Ustadz Bilal Ramadhan'),
+                'bilal'   => $request->input('bilal', 'Ustadz Ridwan Al-Hafidz'),
+                'tema'    => $request->input('tema_khutbah', 'Menjaga Keikhlasan & Kemakmuran Masjid'),
+            ],
+            'iqomah_duration' => [
+                'subuh'   => (int) $request->input('iqomah_subuh', 10),
+                'dzuhur'  => (int) $request->input('iqomah_dzuhur', 10),
+                'ashar'   => (int) $request->input('iqomah_ashar', 8),
+                'maghrib' => (int) $request->input('iqomah_maghrib', 7),
+                'isya'    => (int) $request->input('iqomah_isya', 10),
+                'jumat'   => (int) $request->input('iqomah_jumat', 15),
+            ],
+            'running_texts' => !empty($runningTexts) ? array_values($runningTexts) : [
+                'Selamat datang di Masjid Al-Ikhlas • Mari makmurkan masjid dengan shalat berjamaah.',
+                'Harap menonaktifkan nada dering handphone (HP) saat berada di dalam ruang sholat.'
+            ]
+        ];
+
+        $this->saveSettings($data);
+
+        return redirect()->route('admin.display.setting')
+            ->with('success', 'Pengaturan Smart TV Digital Signage berhasil diperbarui!');
     }
 
     public function apiData()

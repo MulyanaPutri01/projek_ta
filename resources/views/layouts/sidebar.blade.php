@@ -246,5 +246,24 @@
             @endcan
         @endcanany
 
+        <!-- ==========================================
+             Smart TV Digital Signage
+             ========================================== -->
+        <li class="nav-heading">SMART TV SIGNAGE</li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.display.*') ? '' : 'collapsed' }}"
+                href="{{ route('admin.display.setting') }}">
+                <i class="bi bi-tv"></i>
+                <span>Pengaturan Smart TV</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" target="_blank"
+                href="{{ route('display.index') }}">
+                <i class="bi bi-box-arrow-up-right text-success"></i>
+                <span>Buka Layar Smart TV</span>
+            </a>
+        </li>
+
     </ul>
 </aside><!-- End Sidebar-->
