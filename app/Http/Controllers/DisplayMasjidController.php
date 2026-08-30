@@ -90,17 +90,45 @@ class DisplayMasjidController extends Controller
             ]
         ];
 
-        // 7. Running Text Pengumuman
+        // 7. Bacaan Dzikir & Doa Ba'da Sholat
+        $dzikirList = [
+            [
+                'judul' => 'Istighfar & Doa Keselamatan',
+                'arab'  => 'أَسْتَغْفِرُ اللَّهَ (٣×) اللَّهُمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ',
+                'arti'  => 'Aku memohon ampun kepada Allah (3x). Ya Allah, Engkau adalah Dzat yang memberi keselamatan, dan dari-Mu keselamatan, Maha Suci Engkau wahai Dzat yang memiliki keagungan dan kemuliaan.'
+            ],
+            [
+                'judul' => 'Tasbih, Tahmid & Takbir',
+                'arab'  => 'سُبْحَانَ اللَّهِ (٣٣×) • الْحَمْدُ لِلَّهِ (٣٣×) • اللَّهُ أَكْبَرُ (٣٣×)',
+                'arti'  => 'Maha Suci Allah (33x) • Segala puji bagi Allah (33x) • Allah Maha Besar (33x).'
+            ],
+            [
+                'judul' => 'Penyempurna Dzikir (Tahlil)',
+                'arab'  => 'لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَىْءٍ قَدِيرٌ',
+                'arti'  => 'Tidak ada sesembahan yang berhak disembah selain Allah semata, tidak ada sekutu bagi-Nya, milik-Nya segala kerajaan dan bagi-Nya segala pujian, dan Dia Maha Kuasa atas segala sesuatu.'
+            ]
+        ];
+
+        // 8. Info Cuaca & Koordinat Lokasi (Default Karangmulya, Tegal)
+        $weatherInfo = [
+            'temp'      => '28°C',
+            'condition' => 'Cerah Berawan',
+            'humidity'  => '74%',
+            'location'  => 'Karangmulya, Tegal',
+            'qibla'     => '294.5°'
+        ];
+
+        // 9. Running Text Pengumuman
         $runningTexts = [
-            'Selamat datang di ' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . ' • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kebersihan rumah Allah.',
-            'Laporan Kas Terkini: Total Saldo Kas Rp ' . number_format($totalSaldo, 0, ',', '.') . ' (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ') • Transparan & Amanah.',
-            'Infaq & Donasi Pembangunan: ' . ($profil->nama_bank ?? 'Bank Syariah Indonesia') . ' No. Rek: ' . ($profil->nomor_rekening ?? '1234567890') . ' a.n ' . ($profil->atas_nama ?? 'Takmir Masjid'),
-            'Harap menonaktifkan atau mengubah mode senyap pada nada dering handphone (HP) saat berada di dalam ruang utama shalat.',
+            'Selamat datang di ' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . ' • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kesucian rumah Allah.',
+            'Laporan Kas Terkini: Total Saldo Kas Rp ' . number_format($totalSaldo, 0, ',', '.') . ' (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ') • Transparan, Amanah, & Akuntabel.',
+            'Infaq & Sedekah Pembangunan: ' . ($profil->nama_bank ?? 'Bank Syariah Indonesia') . ' No. Rek: ' . ($profil->nomor_rekening ?? '1234567890') . ' a.n ' . ($profil->atas_nama ?? 'Takmir Masjid') . ' (Scan QRIS pada layar slide).',
+            'Peringatan Ibadah: Harap menonaktifkan atau mengubah mode senyap pada nada dering handphone (HP) saat berada di ruang utama sholat.',
         ];
 
         if ($kegiatans->isNotEmpty()) {
             $firstKegiatan = $kegiatans->first();
-            $runningTexts[] = 'Agenda Terdekat: ' . $firstKegiatan->nama_kegiatan . ' (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . ($firstKegiatan->waktu ?? '09:00') . ' WIB) • Tempat: ' . ($firstKegiatan->lokasi ?? 'Masjid');
+            $runningTexts[] = 'Agenda Terdekat: ' . $firstKegiatan->nama_kegiatan . ' (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . ($firstKegiatan->waktu ?? '09:00') . ' WIB) • Lokasi: ' . ($firstKegiatan->lokasi ?? 'Ruang Utama Masjid');
         }
 
         return view('display.index', compact(
@@ -114,15 +142,14 @@ class DisplayMasjidController extends Controller
             'galeris',
             'petugasJumat',
             'haditsList',
+            'dzikirList',
+            'weatherInfo',
             'runningTexts'
         ));
     }
 
     public function apiData()
     {
-        $currentYear = Carbon::now()->year;
-        $currentMonth = Carbon::now()->month;
-
         $profil = ProfilMasjid::first();
 
         $keuanganStats = Keuangan::selectRaw("

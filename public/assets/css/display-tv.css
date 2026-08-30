@@ -1,21 +1,56 @@
 /* ==========================================================================
-   Mosque Digital Signage / Mode TV Display Masjid (display-tv.css)
-   Designed for 16:9 1080p/4K TV Kiosks & Wall Monitors
+   Mosque Digital Signage Broadcast-Grade (display-tv.css)
+   Enterprise / Smart Mosque Edition for 16:9 Fullscreen TV LED
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Scheherazade+New:wght@600;700&display=swap');
 
 :root {
-    --tv-bg-gradient: radial-gradient(circle at 50% 0%, #064e3b 0%, #022c22 45%, #051614 100%);
-    --tv-glass-bg: rgba(6, 78, 59, 0.45);
-    --tv-glass-border: rgba(52, 211, 153, 0.25);
+    --tv-bg-primary: #02221b;
+    --tv-bg-secondary: #04362b;
+    --tv-bg-gradient: radial-gradient(circle at 50% 8%, #064e3b 0%, #022820 40%, #01140f 100%);
+    --tv-glass-bg: rgba(6, 78, 59, 0.5);
+    --tv-glass-card: rgba(15, 30, 26, 0.68);
+    --tv-glass-border: rgba(52, 211, 153, 0.35);
+    --tv-gold-border: rgba(245, 158, 11, 0.45);
     --tv-accent-emerald: #10b981;
+    --tv-accent-emerald-light: #34d399;
     --tv-accent-gold: #f59e0b;
+    --tv-accent-gold-light: #fbbf24;
     --tv-accent-cyan: #06b6d4;
     --tv-text-light: #f8fafc;
     --tv-text-muted: #94a3b8;
     --tv-font-main: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-    --tv-font-arabic: 'Amiri', serif;
+    --tv-font-arabic: 'Scheherazade New', 'Amiri', serif;
+    --tv-font-display: 'Outfit', sans-serif;
+}
+
+/* Theme: Royal Midnight Navy */
+body.theme-navy {
+    --tv-bg-gradient: radial-gradient(circle at 50% 8%, #0f2b4c 0%, #091a2e 40%, #030a13 100%);
+    --tv-glass-bg: rgba(15, 39, 68, 0.55);
+    --tv-glass-card: rgba(10, 25, 46, 0.7);
+    --tv-glass-border: rgba(56, 189, 248, 0.35);
+    --tv-accent-emerald: #38bdf8;
+    --tv-accent-emerald-light: #7dd3fc;
+}
+
+/* Theme: Obsidian Black Gold */
+body.theme-obsidian {
+    --tv-bg-gradient: radial-gradient(circle at 50% 8%, #262118 0%, #12100d 40%, #050403 100%);
+    --tv-glass-bg: rgba(30, 26, 20, 0.65);
+    --tv-glass-card: rgba(24, 20, 16, 0.75);
+    --tv-glass-border: rgba(245, 158, 11, 0.4);
+}
+
+/* Theme: Alabaster Clean Marble */
+body.theme-alabaster {
+    --tv-bg-gradient: radial-gradient(circle at 50% 8%, #f1f5f9 0%, #e2e8f0 40%, #cbd5e1 100%);
+    --tv-glass-bg: rgba(255, 255, 255, 0.85);
+    --tv-glass-card: rgba(255, 255, 255, 0.95);
+    --tv-glass-border: rgba(16, 185, 129, 0.4);
+    --tv-text-light: #0f172a;
+    --tv-text-muted: #64748b;
 }
 
 * {
@@ -23,6 +58,7 @@
     margin: 0;
     padding: 0;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 html, body {
@@ -33,6 +69,56 @@ html, body {
     color: var(--tv-text-light);
     font-family: var(--tv-font-main);
     cursor: default;
+    position: relative;
+}
+
+/* Islamic Geometric Background Pattern Overlay */
+.tv-geometric-pattern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: 
+        radial-gradient(rgba(16, 185, 129, 0.12) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(245, 158, 11, 0.08) 1.5px, transparent 1.5px);
+    background-size: 32px 32px, 64px 64px;
+    background-position: 0 0, 16px 16px;
+    opacity: 0.65;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Ambient Glow Blobs */
+.tv-ambient-blob-1 {
+    position: fixed;
+    top: -100px;
+    left: 20%;
+    width: 650px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%);
+    filter: blur(65px);
+    pointer-events: none;
+    z-index: 1;
+    animation: blobFloat 12s ease-in-out infinite alternate;
+}
+
+.tv-ambient-blob-2 {
+    position: fixed;
+    bottom: -100px;
+    right: 15%;
+    width: 550px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, transparent 70%);
+    filter: blur(65px);
+    pointer-events: none;
+    z-index: 1;
+    animation: blobFloat 15s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes blobFloat {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 30px) scale(1.1); }
 }
 
 /* Base Display Canvas (16:9 layout) */
@@ -41,33 +127,43 @@ html, body {
     flex-direction: column;
     width: 100vw;
     height: 100vh;
-    padding: 18px 24px 14px 24px;
-    background: transparent;
+    padding: 14px 20px 10px 20px;
     position: relative;
+    z-index: 2;
     justify-content: space-between;
 }
 
-/* Glassmorphism Panel Class */
+/* Glassmorphism Classes */
 .tv-glass {
     background: var(--tv-glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--tv-glass-border);
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.tv-glass-card {
+    background: var(--tv-glass-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* ==========================================================================
-   1. HEADER SECTION
+   1. TOP HEADER SECTION
    ========================================================================== */
 .tv-header {
-    height: 95px;
+    height: 94px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 28px;
-    margin-bottom: 16px;
+    padding: 10px 24px;
+    margin-bottom: 12px;
     border-bottom: 2px solid rgba(52, 211, 153, 0.4);
+    position: relative;
 }
 
 .tv-brand {
@@ -77,64 +173,83 @@ html, body {
 }
 
 .tv-logo-icon {
-    width: 58px;
-    height: 58px;
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
     font-size: 1.85rem;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
 }
 
 .tv-mosque-name {
     font-size: 1.65rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.5px;
     color: #ffffff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    line-height: 1.15;
 }
 
 .tv-mosque-address {
-    font-size: 0.88rem;
-    color: var(--tv-text-muted);
-    font-weight: 400;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
 }
 
 .tv-header-center {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
-.tv-calendar-badge {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(52, 211, 153, 0.3);
-    padding: 8px 22px;
+.tv-calendar-pill {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(6, 78, 59, 0.6) 100%);
+    border: 1.5px solid rgba(245, 158, 11, 0.4);
+    padding: 6px 20px;
     border-radius: 50px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
 }
 
 .tv-date-masehi {
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #ffffff;
 }
 
 .tv-date-divider {
-    color: var(--tv-accent-emerald);
-    font-size: 1.1rem;
+    color: var(--tv-accent-gold-light);
+    font-size: 1.15rem;
 }
 
 .tv-date-hijri {
-    font-size: 1.05rem;
+    font-size: 1.12rem;
     font-weight: 700;
-    color: var(--tv-accent-gold);
+    color: var(--tv-accent-gold-light);
     font-family: var(--tv-font-arabic), serif;
+    letter-spacing: 0.5px;
+}
+
+.tv-weather-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 600;
 }
 
 .tv-header-right {
@@ -144,51 +259,60 @@ html, body {
 }
 
 .tv-clock-box {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(6, 78, 59, 0.7) 100%);
-    border: 1.5px solid rgba(52, 211, 153, 0.5);
-    padding: 6px 20px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(6, 78, 59, 0.8) 100%);
+    border: 2px solid rgba(52, 211, 153, 0.6);
+    padding: 4px 20px;
     border-radius: 16px;
     display: flex;
     align-items: baseline;
     gap: 4px;
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
 }
 
 .tv-clock-time {
-    font-size: 2.35rem;
+    font-size: 2.45rem;
     font-weight: 900;
     letter-spacing: 2px;
     color: #ffffff;
     font-variant-numeric: tabular-nums;
+    font-family: var(--tv-font-display);
 }
 
 .tv-clock-seconds {
     font-size: 1.25rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--tv-accent-gold);
-    min-width: 28px;
+    min-width: 30px;
+}
+
+.tv-clock-wib {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #6ee7b7;
+    margin-left: 4px;
+    letter-spacing: 1px;
 }
 
 /* ==========================================================================
-   2. MAIN BODY SECTION (Left Stage & Right Schedule Grid)
+   2. MAIN BODY GRID (Left Stage & Right Schedule Grid)
    ========================================================================== */
 .tv-main-grid {
     display: grid;
-    grid-template-columns: 63% calc(37% - 16px);
-    gap: 16px;
+    grid-template-columns: 63.5% calc(36.5% - 14px);
+    gap: 14px;
     flex: 1;
     min-height: 0;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
-/* --- Left Stage (Dynamic Carousel) --- */
+/* --- Left Stage (Dynamic Multi-Slide Carousel) --- */
 .tv-stage-panel {
     display: flex;
     flex-direction: column;
     height: 100%;
     position: relative;
     overflow: hidden;
-    padding: 22px;
+    padding: 20px 22px;
 }
 
 .tv-carousel-container {
@@ -205,8 +329,8 @@ html, body {
     height: 100%;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.8s ease-in-out, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: scale(0.97);
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.96);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -223,96 +347,139 @@ html, body {
 .tv-slide-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(16, 185, 129, 0.25);
-    border: 1px solid var(--tv-accent-emerald);
+    gap: 10px;
+    background: rgba(16, 185, 129, 0.22);
+    border: 1.5px solid var(--tv-accent-emerald);
     color: #6ee7b7;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.85rem;
     padding: 6px 16px;
     border-radius: 50px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     align-self: flex-start;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }
 
 /* Slide 1: Agenda Kegiatan */
+.tv-kegiatan-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .tv-kegiatan-card {
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--tv-glass-card);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 16px;
-    padding: 18px 22px;
-    margin-bottom: 12px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     gap: 18px;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .tv-kegiatan-datebox {
     background: linear-gradient(135deg, #10b981 0%, #047857 100%);
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 8px 14px;
     text-align: center;
-    min-width: 70px;
+    min-width: 72px;
     color: #ffffff;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .tv-kegiatan-date-day {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.55rem;
+    font-weight: 900;
     line-height: 1;
 }
 
 .tv-kegiatan-date-month {
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Slide 2: Petugas Sholat Jumat */
+.tv-kegiatan-title {
+    font-size: 1.22rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+/* Slide 2: Petugas Sholat & Khutbah Jumat */
 .tv-petugas-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-    height: calc(100% - 50px);
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
 .tv-petugas-card {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1.5px solid rgba(52, 211, 153, 0.25);
+    background: var(--tv-glass-card);
+    border: 1.5px solid rgba(52, 211, 153, 0.3);
     border-radius: 16px;
-    padding: 18px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .tv-petugas-icon {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
-.tv-petugas-khotib .tv-petugas-icon { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-.tv-petugas-imam .tv-petugas-icon { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-.tv-petugas-muadzin .tv-petugas-icon { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid #06b6d4; }
-.tv-petugas-bilal .tv-petugas-icon { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+.tv-petugas-khotib .tv-petugas-icon { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1.5px solid #f59e0b; }
+.tv-petugas-imam .tv-petugas-icon { background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1.5px solid #10b981; }
+.tv-petugas-muadzin .tv-petugas-icon { background: rgba(6, 182, 212, 0.25); color: #22d3ee; border: 1.5px solid #06b6d4; }
+.tv-petugas-bilal .tv-petugas-icon { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1.5px solid #a855f7; }
 
-/* Slide 3: Kas & Rekening Donasi */
+.tv-jumat-reminder {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fef08a;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+/* Slide 3: Kas & QRIS Donasi Digital */
+.tv-kas-qris-container {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 14px;
+    align-items: center;
+    height: calc(100% - 46px);
+}
+
 .tv-kas-hero {
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1.5px solid rgba(52, 211, 153, 0.4);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1.5px solid rgba(52, 211, 153, 0.45);
     border-radius: 18px;
-    padding: 22px;
+    padding: 20px;
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .tv-kas-amount {
@@ -320,23 +487,58 @@ html, body {
     font-weight: 900;
     color: #34d399;
     letter-spacing: 1px;
-    text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+    text-shadow: 0 0 25px rgba(52, 211, 153, 0.5);
+    line-height: 1.2;
+    margin: 6px 0;
 }
 
-/* Slide 4: Galeri Foto */
+.tv-qris-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px;
+    text-align: center;
+    color: #0f172a;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.tv-qris-img-box {
+    width: 120px;
+    height: 120px;
+    background: #ffffff;
+    border: 2px dashed #065f46;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+/* Slide 4: Galeri Ken Burns Zoom */
 .tv-galeri-frame {
     width: 100%;
-    height: calc(100% - 50px);
+    height: calc(100% - 46px);
     border-radius: 16px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
 }
 
 .tv-galeri-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    animation: kenBurns 16s infinite alternate ease-in-out;
+}
+
+@keyframes kenBurns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.12); }
 }
 
 .tv-galeri-caption {
@@ -345,89 +547,128 @@ html, body {
     left: 0;
     right: 0;
     padding: 16px 20px;
-    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, transparent 100%);
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 60%, transparent 100%);
+    backdrop-filter: blur(6px);
 }
 
-/* Slide 5: Hadits & Mutiara Hikmah */
+/* Slide 5: Mutiara Ayat & Hadits */
 .tv-hadits-card {
-    background: rgba(15, 23, 42, 0.7);
-    border: 1.5px solid rgba(245, 158, 11, 0.3);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(6, 78, 59, 0.6) 100%);
+    border: 2px solid rgba(245, 158, 11, 0.4);
     border-radius: 18px;
-    padding: 24px 30px;
-    height: calc(100% - 50px);
+    padding: 22px 30px;
+    height: calc(100% - 46px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    position: relative;
 }
 
 .tv-hadits-arabic {
     font-family: var(--tv-font-arabic), serif;
-    font-size: 1.85rem;
+    font-size: 1.95rem;
     color: #fef08a;
     line-height: 1.8;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     direction: rtl;
+    text-shadow: 0 0 20px rgba(254, 240, 138, 0.3);
 }
 
 .tv-hadits-translation {
     font-size: 1.12rem;
-    color: #f1f5f9;
+    color: #f8fafc;
     font-style: italic;
     line-height: 1.5;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
-/* Carousel Indicators */
+/* Slide 6: Adab & Tata Tertib */
+.tv-adab-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    height: calc(100% - 46px);
+}
+
+.tv-adab-card {
+    background: var(--tv-glass-card);
+    border: 1.5px solid rgba(52, 211, 153, 0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tv-adab-icon {
+    width: 46px;
+    height: 46px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1.5px solid var(--tv-accent-emerald);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #34d399;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* Indicators */
 .tv-carousel-indicators {
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .tv-indicator-dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .tv-indicator-dot.active {
     width: 32px;
     border-radius: 10px;
     background: var(--tv-accent-emerald);
-    box-shadow: 0 0 10px var(--tv-accent-emerald);
+    box-shadow: 0 0 12px var(--tv-accent-emerald);
 }
 
-/* --- Right Side: Prayer Times & Countdown --- */
+/* ==========================================================================
+   3. RIGHT SIDE: 7 PRAYER SCHEDULE & NEXT COUNTDOWN
+   ========================================================================== */
 .tv-schedule-panel {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    padding: 18px 20px;
+    padding: 14px 18px;
 }
 
-/* Next Prayer Hero Badge */
+/* Next Prayer Hero Countdown */
 .tv-next-prayer-hero {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(6, 78, 59, 0.4) 100%);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(6, 78, 59, 0.6) 100%);
     border: 1.5px solid var(--tv-accent-emerald);
     border-radius: 16px;
-    padding: 12px 18px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    margin-bottom: 8px;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
 }
 
 .tv-next-prayer-label {
-    font-size: 0.88rem;
+    font-size: 0.8rem;
     color: #a7f3d0;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.5px;
 }
 
@@ -440,47 +681,53 @@ html, body {
 .tv-next-countdown {
     font-size: 1.55rem;
     font-weight: 900;
-    color: var(--tv-accent-gold);
+    color: var(--tv-accent-gold-light);
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+    font-family: var(--tv-font-display);
 }
 
-/* Prayer Schedule Cards Stack */
+/* 7 Prayer Cards Stack */
 .tv-prayer-list {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 6px;
     flex: 1;
     justify-content: space-around;
 }
 
 .tv-prayer-card {
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
-    padding: 10px 18px;
+    padding: 7px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
 
 .tv-prayer-card.active {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(4, 120, 87, 0.45) 100%);
-    border: 1.5px solid var(--tv-accent-emerald);
-    transform: scale(1.03);
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(4, 120, 87, 0.5) 100%);
+    border: 2px solid var(--tv-accent-emerald);
+    transform: scale(1.025);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
 }
 
 .tv-prayer-card.active::before {
     content: '▶';
     position: absolute;
     left: 6px;
-    color: var(--tv-accent-gold);
+    color: var(--tv-accent-gold-light);
     font-size: 0.75rem;
-    animation: pulse 1.5s infinite;
+    animation: pulseArrow 1.5s infinite;
+}
+
+@keyframes pulseArrow {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(3px); opacity: 0.5; }
 }
 
 .tv-prayer-info {
@@ -489,57 +736,69 @@ html, body {
     gap: 12px;
 }
 
-.tv-prayer-icon {
-    font-size: 1.25rem;
+.tv-prayer-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 1.05rem;
     color: var(--tv-text-muted);
 }
 
-.tv-prayer-card.active .tv-prayer-icon {
-    color: var(--tv-accent-gold);
+.tv-prayer-card.active .tv-prayer-icon-wrap {
+    background: rgba(245, 158, 11, 0.25);
+    color: var(--tv-accent-gold-light);
+    border: 1px solid var(--tv-accent-gold);
 }
 
 .tv-prayer-name {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #e2e8f0;
 }
 
 .tv-prayer-card.active .tv-prayer-name {
     color: #ffffff;
-    font-weight: 800;
+    font-weight: 900;
 }
 
 .tv-prayer-time {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     font-weight: 800;
     color: #ffffff;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.5px;
+    font-family: var(--tv-font-display);
 }
 
 .tv-prayer-card.active .tv-prayer-time {
-    color: var(--tv-accent-gold);
-    font-size: 1.45rem;
+    color: var(--tv-accent-gold-light);
+    font-size: 1.42rem;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
 }
 
 /* ==========================================================================
-   3. BOTTOM RUNNING TEXT (MARQUEE)
+   4. BOTTOM RUNNING TEXT MARQUEE
    ========================================================================== */
 .tv-bottom-bar {
-    height: 52px;
+    height: 48px;
     display: flex;
     align-items: center;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(52, 211, 153, 0.35);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid rgba(52, 211, 153, 0.4);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .tv-marquee-label {
     background: linear-gradient(135deg, #10b981 0%, #047857 100%);
     color: #ffffff;
-    font-weight: 800;
+    font-weight: 900;
     font-size: 0.85rem;
     padding: 0 20px;
     height: 100%;
@@ -550,7 +809,7 @@ html, body {
     text-transform: uppercase;
     white-space: nowrap;
     z-index: 2;
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 5px 0 18px rgba(0, 0, 0, 0.35);
 }
 
 .tv-marquee-wrapper {
@@ -564,10 +823,10 @@ html, body {
 .tv-marquee-track {
     display: inline-block;
     white-space: nowrap;
-    animation: marquee 35s linear infinite;
+    animation: marquee 38s linear infinite;
     font-size: 1.05rem;
     font-weight: 600;
-    color: #f1f5f9;
+    color: #f8fafc;
 }
 
 @keyframes marquee {
@@ -576,7 +835,7 @@ html, body {
 }
 
 /* ==========================================================================
-   4. FULLSCREEN OVERLAYS (Adzan, Iqomah & Shaf Mode)
+   5. CINEMATIC FULLSCREEN OVERLAYS (Adzan, Circular Iqomah, Shaf, Dzikir)
    ========================================================================== */
 .tv-fullscreen-overlay {
     position: fixed;
@@ -584,8 +843,8 @@ html, body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(2, 44, 34, 0.96);
-    backdrop-filter: blur(25px);
+    background: rgba(1, 24, 18, 0.97);
+    backdrop-filter: blur(30px);
     z-index: 9999;
     display: none;
     flex-direction: column;
@@ -600,72 +859,83 @@ html, body {
     display: flex;
 }
 
-.tv-alert-icon {
-    font-size: 5.5rem;
-    color: var(--tv-accent-gold);
-    margin-bottom: 20px;
-    animation: bounce 1.5s infinite;
+/* Circular SVG Gauge for Iqomah */
+.tv-iqomah-circular-wrap {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin: 18px 0;
 }
 
-.tv-alert-title {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: #ffffff;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
+.tv-iqomah-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
 }
 
-.tv-alert-subtitle {
-    font-size: 1.5rem;
-    color: #a7f3d0;
-    margin-bottom: 30px;
+.tv-iqomah-circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-width: 14;
 }
 
-.tv-iqomah-countdown-box {
-    background: rgba(15, 23, 42, 0.8);
-    border: 3px solid var(--tv-accent-gold);
-    border-radius: 28px;
-    padding: 20px 50px;
-    margin-bottom: 30px;
-    box-shadow: 0 0 50px rgba(245, 158, 11, 0.35);
+.tv-iqomah-circle-progress {
+    fill: none;
+    stroke: var(--tv-accent-gold);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-dasharray: 691;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
 }
 
-.tv-iqomah-timer {
-    font-size: 5.5rem;
+.tv-iqomah-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.tv-iqomah-timer-large {
+    font-size: 3.6rem;
     font-weight: 900;
     color: var(--tv-accent-gold);
     font-variant-numeric: tabular-nums;
     line-height: 1;
+    font-family: var(--tv-font-display);
 }
 
-.tv-progress-bar-container {
-    width: 500px;
-    max-width: 80vw;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 15px;
+/* Settings Modal & Drawer */
+.tv-settings-drawer {
+    position: fixed;
+    bottom: 75px;
+    right: 25px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1.5px solid var(--tv-accent-emerald);
+    border-radius: 20px;
+    padding: 22px;
+    width: 350px;
+    backdrop-filter: blur(25px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: none;
+    animation: fadeIn 0.3s ease;
 }
 
-.tv-progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
-    width: 100%;
-    transition: width 1s linear;
+.tv-settings-drawer.active {
+    display: block;
 }
 
-/* ==========================================================================
-   5. FLOATING CONTROLS (Fullscreen, Audio, & Preview Simulator)
-   ========================================================================== */
+/* Floating Controls */
 .tv-floating-tools {
     position: fixed;
-    bottom: 24px;
-    right: 30px;
+    bottom: 16px;
+    right: 24px;
     display: flex;
     gap: 8px;
-    opacity: 0.35;
+    opacity: 0.3;
     transition: opacity 0.3s ease;
     z-index: 1000;
 }
@@ -675,12 +945,12 @@ html, body {
 }
 
 .tv-btn-tool {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.88);
     border: 1px solid rgba(52, 211, 153, 0.4);
     color: #ffffff;
-    padding: 8px 14px;
-    border-radius: 12px;
-    font-size: 0.82rem;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     backdrop-filter: blur(10px);
@@ -694,20 +964,4 @@ html, body {
     background: var(--tv-accent-emerald);
     color: #022c22;
     transform: translateY(-2px);
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
 }
