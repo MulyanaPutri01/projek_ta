@@ -102,6 +102,80 @@
       box-shadow: 0 12px 25px -4px rgba(15, 23, 42, 0.1) !important;
       border-color: #10b981 !important;
     }
+
+    /* Topbar & Header Mobile Responsive Styles */
+    .header .topbar {
+      background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
+      min-height: 38px;
+      height: auto;
+      padding: 6px 0;
+      font-size: 0.82rem;
+      color: #ffffff;
+    }
+    .header .topbar a {
+      color: #ffffff;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .header .topbar a:hover {
+      color: #fde047 !important;
+    }
+    .branding {
+      padding: 10px 0;
+      background: #ffffff;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    }
+    .branding .logo h1.sitename {
+      font-size: 1.3rem;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .branding .logo .logo-subtext {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    @media (max-width: 767.98px) {
+      .header .topbar {
+        font-size: 0.78rem;
+        padding: 6px 0;
+      }
+      .branding .logo h1.sitename {
+        font-size: 1.12rem;
+      }
+      .branding .logo .logo-subtext {
+        font-size: 0.7rem;
+      }
+      .jadwal-sholat-bar {
+        padding: 8px 0;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .header .topbar {
+        font-size: 0.72rem;
+        padding: 5px 0;
+      }
+      .branding .logo h1.sitename {
+        font-size: 1.02rem;
+      }
+      .branding .logo .logo-subtext {
+        font-size: 0.65rem;
+      }
+      .branding .logo i.fa-mosque {
+        font-size: 1.45rem !important;
+      }
+      .sholat-pill {
+        padding: 4px 6px;
+        border-radius: 8px;
+      }
+      .sholat-pill .name {
+        font-size: 0.62rem;
+      }
+      .sholat-pill .time {
+        font-size: 0.85rem;
+      }
+    }
     .gallery-item {
       border-radius: 12px;
       overflow: hidden;
@@ -636,27 +710,37 @@
   <header id="header" class="header sticky-top">
 
     <div class="topbar d-flex align-items-center">
-      <div class="container d-flex justify-content-center justify-content-md-between">
-        <div class="contact-info d-flex align-items-center">
-          <i class="bi bi-geo-alt"><span class="ms-1">{{ $profil->alamat ?? 'Desa Karangmulya, Kec. Suradadi, Tegal, Jawa Tengah' }}</span></i>
-          <i class="bi bi-telephone d-flex align-items-center ms-4"><span>{{ $profil->telepon ?? '0812-3456-7890' }}</span></i>
+      <div class="container d-flex justify-content-between align-items-center">
+        <!-- Contact & Location (Address hidden on mobile, Phone always visible) -->
+        <div class="contact-info d-flex align-items-center gap-3">
+          <span class="d-none d-lg-inline-flex align-items-center text-truncate" style="max-width: 450px;">
+            <i class="bi bi-geo-alt-fill text-warning me-1"></i>
+            <span>{{ $profil->alamat ?? 'Desa Karangmulya, Kec. Suradadi, Tegal, Jawa Tengah' }}</span>
+          </span>
+          <a href="tel:{{ preg_replace('/[^0-9+]/', '', $profil->telepon ?? '081234567890') }}" class="d-inline-flex align-items-center text-white text-decoration-none">
+            <i class="bi bi-whatsapp text-warning me-1"></i>
+            <span>{{ $profil->telepon ?? '0812-3456-7890' }}</span>
+          </a>
         </div>
-        <div class="contact-info d-md-flex align-items-center">
-          <i class="bi bi-calendar d-flex align-items-center ms-4">
-            <span>{{ $tanggal }}</span>
-            <span id="hijri-date-topbar" class="badge bg-success bg-opacity-75 ms-2 px-2 py-1 text-white fw-normal" style="font-size: 0.75rem;"></span>
-          </i>
+        <!-- Date & Hijri Badge -->
+        <div class="contact-info d-flex align-items-center">
+          <span class="d-inline-flex align-items-center text-white">
+            <i class="bi bi-calendar-event text-warning me-1 d-none d-sm-inline"></i>
+            <span class="d-none d-md-inline">{{ $tanggal }}</span>
+            <span class="d-inline d-md-none small">{{ now()->locale('id')->isoFormat('D MMM YYYY') }}</span>
+            <span id="hijri-date-topbar" class="badge bg-black bg-opacity-30 ms-2 px-2 py-1 text-white fw-normal d-none d-sm-inline" style="font-size: 0.72rem;"></span>
+          </span>
         </div>
       </div>
     </div><!-- End Top Bar -->
 
     <div class="branding d-flex align-items-center">
       <div class="container position-relative d-flex align-items-center justify-content-between">
-        <a href="/" class="logo d-flex align-items-center me-auto text-decoration-none">
-          <i class="fa-solid fa-mosque text-success fs-2 me-2"></i>
+        <a href="/" class="logo d-flex align-items-center me-auto text-decoration-none pe-2">
+          <i class="fa-solid fa-mosque text-success fs-3 fs-md-2 me-2"></i>
           <div>
             <h1 class="sitename fs-4 mb-0 fw-bold">{{ $profil->nama_masjid ?? 'Masjid Al-Ikhlas' }}</h1>
-            <small class="text-muted d-block" style="font-size: 0.75rem; margin-top: -3px;">Dukuh Semendot, Karangmulya</small>
+            <small class="text-muted d-block logo-subtext" style="margin-top: -3px;">Dukuh Semendot, Karangmulya</small>
           </div>
         </a>
 

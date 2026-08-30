@@ -81,14 +81,26 @@ class GaleriController extends Controller
                     $csrf = csrf_field();
                     $deleteMethod = method_field('DELETE');
 
+                    $isOwnerOrAdmin = (auth()->user()?->hasRole('admin') || $row->takmir_id == auth()->id());
+
+                    if ($isOwnerOrAdmin) {
+                        return '
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Foto"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+                                <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus foto dokumentasi ini?\')">
+                                    ' . $csrf . '
+                                    ' . $deleteMethod . '
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Foto"><i class="bi bi-trash me-1"></i> Hapus</button>
+                                </form>
+                            </div>
+                        ';
+                    }
+
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Foto"><i class="bi bi-pencil-square me-1"></i> Edit</a>
-                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus foto dokumentasi ini?\')">
-                                ' . $csrf . '
-                                ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Foto"><i class="bi bi-trash me-1"></i> Hapus</button>
-                            </form>
+                            <button type="button" class="btn btn-secondary btn-sm shadow-sm opacity-50" disabled title="Hanya pengunggah (' . e($row->takmir->nama_takmir ?? 'Pengunggah Asli') . ') yang dapat mengedit/menghapus">
+                                <i class="bi bi-lock-fill me-1"></i> Terkunci
+                            </button>
                         </div>
                     ';
                 })
@@ -158,6 +170,11 @@ class GaleriController extends Controller
     public function edit($id)
     {
         $galeri = Galeri::findOrFail($id);
+
+        if ($galeri->takmir_id && $galeri->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('galeri.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah data foto dokumentasi yang Anda unggah sendiri.');
+        }
+
         $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
 
         return view('galeri.edit', compact('galeri', 'kegiatans'));
@@ -165,6 +182,12 @@ class GaleriController extends Controller
 
     public function update(Request $request, $id)
     {
+        $galeri = Galeri::findOrFail($id);
+
+        if ($galeri->takmir_id && $galeri->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('galeri.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah data foto dokumentasi yang Anda unggah sendiri.');
+        }
+
         $request->validate([
             'tanggal'     => 'required|date',
             'nama_foto'   => 'required|string|max:100',
@@ -178,7 +201,6 @@ class GaleriController extends Controller
             'kegiatan_id.required' => 'Silakan pilih agenda kegiatan terkait.',
         ]);
 
-        $galeri = Galeri::findOrFail($id);
         $filePath = $galeri->gambar;
 
         if ($request->hasFile('gambar')) {
@@ -200,7 +222,7 @@ class GaleriController extends Controller
             'nama_foto'   => $request->nama_foto,
             'gambar'      => $filePath,
             'kegiatan_id' => $request->kegiatan_id,
-            'takmir_id'   => auth()->id(),
+            'takmir_id'   => $galeri->takmir_id ?: auth()->id(),
         ]);
 
         return redirect()->route('galeri.index')->with('success', 'Foto dokumentasi berhasil diperbarui.');
@@ -209,6 +231,10 @@ class GaleriController extends Controller
     public function destroy($id)
     {
         $galeri = Galeri::findOrFail($id);
+
+        if ($galeri->takmir_id && $galeri->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('galeri.index')->with('error', 'Akses ditolak: Anda hanya dapat menghapus foto dokumentasi yang Anda unggah sendiri.');
+        }
 
         if (!empty($galeri->gambar) && file_exists(public_path('storage/' . $galeri->gambar))) {
             @unlink(public_path('storage/' . $galeri->gambar));

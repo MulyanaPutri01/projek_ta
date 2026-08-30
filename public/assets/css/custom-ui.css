@@ -365,3 +365,80 @@ table.dataTable tbody tr:hover {
 .modal-body {
   padding: 24px;
 }
+
+/* ========================================================
+   Mobile UI/UX Responsiveness Enhancements (< 768px)
+   ======================================================== */
+@media (max-width: 767.98px) {
+  #main {
+    padding: 16px 12px !important;
+  }
+
+  .dashboard-welcome-banner {
+    padding: 18px 16px;
+  }
+
+  .dashboard-welcome-banner h2 {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-welcome-banner p {
+    font-size: 0.88rem;
+  }
+
+  .info-card .card-body {
+    padding: 16px;
+  }
+
+  .info-card .card-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+
+  .info-card h6 {
+    font-size: 1.25rem;
+  }
+
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_filter {
+    text-align: left !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .dataTables_wrapper .dataTables_filter input {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 4px;
+  }
+
+  .dataTables_wrapper .dataTables_info,
+  .dataTables_wrapper .dataTables_paginate {
+    text-align: center !important;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .header .header-nav .nav-profile span {
+    display: none !important;
+  }
+
+  .header .logo span {
+    font-size: 1rem;
+  }
+
+  .btn {
+    min-height: 38px;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+}

@@ -269,4 +269,59 @@ class AuditAllFeaturesTest extends TestCase
         $this->delete("/keuangan/{$keuangan->id}");
         $this->delete("/donatur/{$donatur->id}");
     }
+
+    /** Test that a user cannot delete or edit records uploaded/created by other users */
+    public function test_user_ownership_deletion_and_edit_restriction()
+    {
+        if (!$this->bendaharaUser) {
+            $this->markTestSkipped('Need bendahara user to test ownership restrictions');
+        }
+
+        // 1. Create a second Bendahara user who has 'keuangan-delete' & 'keuangan-edit' permissions
+        $bendahara2 = Takmir::updateOrCreate(
+            ['username' => 'bendahara_test2'],
+            [
+                'nama_takmir' => 'Bendahara Kedua Test',
+                'password' => bcrypt('password123'),
+                'status' => 'active',
+                'role_id' => 2,
+            ]
+        );
+        $bendahara2->syncRoles(['bendahara']);
+
+        // 2. Create a Keuangan transaction as Bendahara 1
+        $this->actingAs($this->bendaharaUser);
+        $keuangan = Keuangan::create([
+            'tanggal' => now()->toDateString(),
+            'sumber_keuangan' => 'Kas Bendahara 1 Test Ownership',
+            'keterangan' => 'Uji kepemilikan data',
+            'nominal' => 100000,
+            'kategori_id' => 1,
+            'takmir_id' => $this->bendaharaUser->id,
+        ]);
+
+        // 3. Switch login to Bendahara 2 (same role, but not the creator)
+        $this->actingAs($bendahara2);
+
+        // Bendahara 2 attempts to delete Bendahara 1's transaction -> MUST BE BLOCKED
+        $deleteResponse = $this->delete("/keuangan/{$keuangan->id}");
+        $deleteResponse->assertRedirect(route('keuangan.index'));
+        $deleteResponse->assertSessionHas('error');
+
+        // Verify record still exists in database
+        $this->assertNotNull(Keuangan::find($keuangan->id), 'Data transaksi milik orang lain tidak boleh terhapus oleh user lain!');
+
+        // Bendahara 2 attempts to edit Bendahara 1's transaction -> MUST BE BLOCKED
+        $editResponse = $this->get("/keuangan/{$keuangan->id}/edit");
+        $editResponse->assertRedirect(route('keuangan.index'));
+        $editResponse->assertSessionHas('error');
+
+        // 4. Creator (Bendahara 1) can delete their own record
+        $this->actingAs($this->bendaharaUser);
+        $this->delete("/keuangan/{$keuangan->id}")->assertRedirect(route('keuangan.index'));
+        $this->assertNull(Keuangan::find($keuangan->id));
+
+        // Cleanup test user
+        $bendahara2->delete();
+    }
 }

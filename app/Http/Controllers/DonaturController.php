@@ -62,22 +62,34 @@ class DonaturController extends Controller
                     $deleteMethod = method_field('DELETE');
                     $totalNominal = $row->keuangans->sum('nominal');
 
+                    $isOwnerOrAdmin = (auth()->user()?->hasRole('admin') || $row->takmir_id == auth()->id());
+
+                    if ($isOwnerOrAdmin) {
+                        return '
+                            <div class="d-flex justify-content-center gap-1">
+                                <button type="button" class="btn btn-warning btn-sm btn-edit shadow-sm" 
+                                    data-id="' . $row->id . '" 
+                                    data-nama="' . e($row->nama_donatur) . '" 
+                                    data-alamat="' . e($row->alamat) . '" 
+                                    data-telepon="' . e($row->telepon ?? '') . '" 
+                                    data-nominal="' . $totalNominal . '"
+                                    data-tanggal="' . ($row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : '') . '">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </button>
+                                <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus data donatur ini?\')">
+                                    ' . $csrf . '
+                                    ' . $deleteMethod . '
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm"><i class="bi bi-trash"></i> Hapus</button>
+                                </form>
+                            </div>
+                        ';
+                    }
+
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <button type="button" class="btn btn-warning btn-sm btn-edit shadow-sm" 
-                                data-id="' . $row->id . '" 
-                                data-nama="' . e($row->nama_donatur) . '" 
-                                data-alamat="' . e($row->alamat) . '" 
-                                data-telepon="' . e($row->telepon ?? '') . '" 
-                                data-nominal="' . $totalNominal . '"
-                                data-tanggal="' . ($row->tanggal ? Carbon::parse($row->tanggal)->format('Y-m-d') : '') . '">
-                                <i class="bi bi-pencil-square"></i> Edit
+                            <button type="button" class="btn btn-secondary btn-sm shadow-sm opacity-50" disabled title="Hanya pencatat (' . e($row->takmir->nama_takmir ?? 'Pencatat Asli') . ') yang dapat mengedit/menghapus">
+                                <i class="bi bi-lock-fill"></i> Terkunci
                             </button>
-                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus data donatur ini?\')">
-                                ' . $csrf . '
-                                ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm shadow-sm"><i class="bi bi-trash"></i> Hapus</button>
-                            </form>
                         </div>
                     ';
                 })
@@ -136,11 +148,22 @@ class DonaturController extends Controller
     public function edit($id)
     {
         $donatur = Donatur::findOrFail($id);
+
+        if ($donatur->takmir_id && $donatur->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('donatur.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah data donatur yang Anda daftarkan sendiri.');
+        }
+
         return view('donatur.edit', compact('donatur'));
     }
 
     public function update(Request $request, $id)
     {
+        $donatur = Donatur::findOrFail($id);
+
+        if ($donatur->takmir_id && $donatur->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('donatur.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah data donatur yang Anda daftarkan sendiri.');
+        }
+
         $request->validate([
             'tanggal'      => 'required|date',
             'nama_donatur' => 'required|string|max:100',
@@ -152,13 +175,12 @@ class DonaturController extends Controller
             'alamat.required'       => 'Alamat donatur wajib diisi.',
         ]);
 
-        $donatur = Donatur::findOrFail($id);
         $donatur->update([
             'tanggal'      => $request->input('tanggal'),
             'nama_donatur' => $request->input('nama_donatur'),
             'alamat'       => $request->input('alamat'),
             'telepon'      => $request->input('telepon'),
-            'takmir_id'    => auth()->id(),
+            'takmir_id'    => $donatur->takmir_id ?: auth()->id(),
         ]);
 
         return redirect()->route('donatur.index')->with('success', 'Data donatur berhasil diperbarui.');
@@ -167,6 +189,11 @@ class DonaturController extends Controller
     public function destroy($id)
     {
         $donatur = Donatur::findOrFail($id);
+
+        if ($donatur->takmir_id && $donatur->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('donatur.index')->with('error', 'Akses ditolak: Anda hanya dapat menghapus data donatur yang Anda daftarkan sendiri.');
+        }
+
         $donatur->delete();
 
         return redirect()->route('donatur.index')->with('success', 'Data donatur berhasil dihapus.');

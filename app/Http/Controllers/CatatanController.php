@@ -80,14 +80,26 @@ class CatatanController extends Controller
                     $csrf = csrf_field();
                     $deleteMethod = method_field('DELETE');
 
+                    $isOwnerOrAdmin = (auth()->user()?->hasRole('admin') || $row->takmir_id == auth()->id());
+
+                    if ($isOwnerOrAdmin) {
+                        return '
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Catatan"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+                                <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus catatan kondisi ini?\')">
+                                    ' . $csrf . '
+                                    ' . $deleteMethod . '
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Catatan"><i class="bi bi-trash me-1"></i> Hapus</button>
+                                </form>
+                            </div>
+                        ';
+                    }
+
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Catatan"><i class="bi bi-pencil-square me-1"></i> Edit</a>
-                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus catatan kondisi ini?\')">
-                                ' . $csrf . '
-                                ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Catatan"><i class="bi bi-trash me-1"></i> Hapus</button>
-                            </form>
+                            <button type="button" class="btn btn-secondary btn-sm shadow-sm opacity-50" disabled title="Hanya pencatat (' . e($row->takmir->nama_takmir ?? 'Pencatat Asli') . ') yang dapat mengedit/menghapus">
+                                <i class="bi bi-lock-fill me-1"></i> Terkunci
+                            </button>
                         </div>
                     ';
                 })
@@ -139,6 +151,11 @@ class CatatanController extends Controller
     public function edit($id)
     {
         $catatan = Catatan::findOrFail($id);
+
+        if ($catatan->takmir_id && $catatan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('catatan.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah catatan kondisi yang Anda buat sendiri.');
+        }
+
         $kondisis = Kondisi::all();
         $inventariss = Inventaris::all();
         $takmirs = Takmir::all();
@@ -148,6 +165,12 @@ class CatatanController extends Controller
 
     public function update(Request $request, $id)
     {
+        $catatan = Catatan::findOrFail($id);
+
+        if ($catatan->takmir_id && $catatan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('catatan.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah catatan kondisi yang Anda buat sendiri.');
+        }
+
         $request->validate([
             'inventaris_id'   => 'required|exists:inventaris,id',
             'tanggal_catatan' => 'required|date',
@@ -158,7 +181,6 @@ class CatatanController extends Controller
             'kondisi_id.required'      => 'Status kondisi barang wajib dipilih.',
         ]);
 
-        $catatan = Catatan::findOrFail($id);
         $data = $request->only([
             'inventaris_id',
             'tanggal_catatan',
@@ -173,6 +195,11 @@ class CatatanController extends Controller
     public function destroy($id)
     {
         $catatan = Catatan::findOrFail($id);
+
+        if ($catatan->takmir_id && $catatan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('catatan.index')->with('error', 'Akses ditolak: Anda hanya dapat menghapus catatan kondisi yang Anda buat sendiri.');
+        }
+
         $catatan->delete();
 
         return redirect()->route('catatan.index')->with('success', 'Catatan kondisi barang berhasil dihapus.');

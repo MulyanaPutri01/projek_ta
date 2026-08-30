@@ -69,14 +69,26 @@ class KeuanganController extends Controller
                     $csrf = csrf_field();
                     $deleteMethod = method_field('DELETE');
 
+                    $isOwnerOrAdmin = (auth()->user()?->hasRole('admin') || $row->takmir_id == auth()->id());
+
+                    if ($isOwnerOrAdmin) {
+                        return '
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Transaksi"><i class="bi bi-pencil"></i></a>
+                                <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus transaksi ini?\')">
+                                    ' . $csrf . '
+                                    ' . $deleteMethod . '
+                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Transaksi"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        ';
+                    }
+
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Transaksi"><i class="bi bi-pencil"></i></a>
-                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus transaksi ini?\')">
-                                ' . $csrf . '
-                                ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Transaksi"><i class="bi bi-trash"></i></button>
-                            </form>
+                            <button type="button" class="btn btn-secondary btn-sm shadow-sm opacity-50" disabled title="Hanya pencatat (' . e($row->takmir->nama_takmir ?? 'Pencatat Asli') . ') yang dapat mengedit/menghapus">
+                                <i class="bi bi-lock-fill"></i>
+                            </button>
                         </div>
                     ';
                 })
@@ -191,6 +203,11 @@ class KeuanganController extends Controller
     public function edit($id)
     {
         $keuangan = Keuangan::findOrFail($id);
+
+        if ($keuangan->takmir_id && $keuangan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('keuangan.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah transaksi kas yang Anda catat sendiri.');
+        }
+
         $kategoris = Kategori::all();
         $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
         $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
@@ -209,6 +226,12 @@ class KeuanganController extends Controller
 
     public function update(Request $request, $id)
     {
+        $keuangan = Keuangan::findOrFail($id);
+
+        if ($keuangan->takmir_id && $keuangan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('keuangan.index')->with('error', 'Akses ditolak: Anda hanya dapat mengubah transaksi kas yang Anda catat sendiri.');
+        }
+
         $request->validate([
             'tanggal'         => 'required|date',
             'sumber_keuangan' => 'required|string|max:255',
@@ -225,12 +248,11 @@ class KeuanganController extends Controller
         ]);
 
         $data = $request->all();
-        $data['takmir_id']   = auth()->id() ?? 1;
+        $data['takmir_id']   = $keuangan->takmir_id ?: auth()->id();
         $data['keterangan']  = $request->keterangan ?: $request->sumber_keuangan;
         $data['donatur_id']  = $request->donatur_id ?: null;
         $data['kegiatan_id'] = $request->kegiatan_id ?: null;
 
-        $keuangan = Keuangan::findOrFail($id);
         $keuangan->update($data);
 
         return redirect()->route('keuangan.index')->with('success', 'Transaksi keuangan berhasil diperbarui.');
@@ -239,6 +261,11 @@ class KeuanganController extends Controller
     public function destroy($id)
     {
         $keuangan = Keuangan::findOrFail($id);
+
+        if ($keuangan->takmir_id && $keuangan->takmir_id != auth()->id() && !auth()->user()?->hasRole('admin')) {
+            return redirect()->route('keuangan.index')->with('error', 'Akses ditolak: Anda hanya dapat menghapus transaksi kas yang Anda catat sendiri.');
+        }
+
         $keuangan->delete();
 
         return redirect()->route('keuangan.index')->with('success', 'Transaksi keuangan berhasil dihapus.');
