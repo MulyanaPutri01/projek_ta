@@ -829,6 +829,24 @@ html, body {
     color: #f8fafc;
 }
 
+.tv-marquee-track p,
+.tv-marquee-track div,
+.tv-marquee-track span,
+.tv-marquee-track ul,
+.tv-marquee-track ol,
+.tv-marquee-track li {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.tv-marquee-track p:not(:last-child)::after,
+.tv-marquee-track li:not(:last-child)::after {
+    content: ' \00a0\00a0\00a0 ✦ \00a0\00a0\00a0 ';
+    color: var(--tv-accent-gold-light);
+    font-weight: bold;
+}
+
 @keyframes marquee {
     0% { transform: translateX(100%); }
     100% { transform: translateX(-100%); }

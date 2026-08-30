@@ -360,9 +360,7 @@
             </div>
             <div class="tv-marquee-wrapper">
                 <div class="tv-marquee-track" id="runningTextTrack">
-                    @foreach($runningTexts as $text)
-                        <span>{{ $text }}</span> &nbsp;&nbsp;&nbsp; ✦ &nbsp;&nbsp;&nbsp;
-                    @endforeach
+                    {!! $runningTextHtml !!}
                 </div>
             </div>
         </footer>

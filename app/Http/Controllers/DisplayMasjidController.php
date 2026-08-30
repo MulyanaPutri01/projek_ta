@@ -36,6 +36,7 @@ class DisplayMasjidController extends Controller
                 'isya'    => 10,
                 'jumat'   => 15,
             ],
+            'running_texts_html' => '<p>Selamat datang di <strong>Masjid Al-Ikhlas</strong> • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kesucian rumah Allah.</p><p>Infaq &amp; Sedekah Pembangunan: <strong>Bank Syariah Indonesia</strong> No. Rek: <strong>1234567890</strong> a.n Takmir Masjid (Scan QRIS pada layar TV).</p><p>Peringatan Ibadah: Harap <strong>menonaktifkan atau mengubah mode senyap</strong> pada nada dering handphone (HP) saat berada di ruang sholat.</p>',
             'running_texts' => [
                 'Selamat datang di Masjid Al-Ikhlas • Mari makmurkan masjid dengan shalat berjamaah dan menjaga kesucian rumah Allah.',
                 'Infaq & Sedekah Pembangunan: Bank Syariah Indonesia No. Rek: 1234567890 a.n Takmir Masjid (Scan QRIS pada layar TV).',
@@ -174,16 +175,19 @@ class DisplayMasjidController extends Controller
             'qibla'     => '294.5°'
         ];
 
-        // 9. Running Text Pengumuman
-        $runningTexts = !empty($settings['running_texts']) ? $settings['running_texts'] : [
-            'Selamat datang di ' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . ' • Mari makmurkan masjid dengan shalat berjamaah.',
-            'Laporan Kas: Saldo Kas Rp ' . number_format($totalSaldo, 0, ',', '.') . ' (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ').',
-            'Harap menonaktifkan nada dering handphone (HP) saat berada di dalam ruang utama sholat.'
-        ];
+        // 9. Running Text Summernote Rich HTML & Dynamic Elements
+        $runningTextHtml = $settings['running_texts_html'] ?? '';
 
+        if (empty(trim(strip_tags($runningTextHtml)))) {
+            $runningTextHtml = '<p>Selamat datang di <strong>' . ($profil->nama_masjid ?? 'Masjid Al-Ikhlas') . '</strong> • Mari makmurkan masjid dengan shalat berjamaah.</p>'
+                             . '<p>Laporan Kas: Saldo Kas <strong>Rp ' . number_format($totalSaldo, 0, ',', '.') . '</strong> (Pemasukan Bulan Ini: Rp ' . number_format($pemasukanBulanIni, 0, ',', '.') . ').</p>'
+                             . '<p>Harap menonaktifkan nada dering handphone (HP) saat berada di dalam ruang utama sholat.</p>';
+        }
+
+        // Add auto-generated upcoming agenda snippet to ticker
         if ($kegiatans->isNotEmpty()) {
             $firstKegiatan = $kegiatans->first();
-            $runningTexts[] = 'Agenda Terdekat: ' . $firstKegiatan->nama_kegiatan . ' (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . ($firstKegiatan->waktu ?? '09:00') . ' WIB)';
+            $runningTextHtml .= '<p><span class="badge bg-warning text-dark me-1">AGENDA</span> <strong>' . e($firstKegiatan->nama_kegiatan) . '</strong> (' . Carbon::parse($firstKegiatan->tanggal)->translatedFormat('d F Y') . ' - Pukul ' . e($firstKegiatan->waktu ?? '09:00') . ' WIB)</p>';
         }
 
         return view('display.index', compact(
@@ -199,7 +203,7 @@ class DisplayMasjidController extends Controller
             'haditsList',
             'dzikirList',
             'weatherInfo',
-            'runningTexts',
+            'runningTextHtml',
             'settings'
         ));
     }
@@ -221,7 +225,7 @@ class DisplayMasjidController extends Controller
      */
     public function updateSetting(Request $request)
     {
-        $runningTexts = array_filter(array_map('trim', explode("\n", $request->input('running_texts_raw', ''))));
+        $runningTextHtml = $request->input('running_texts_html', '');
 
         $data = [
             'theme' => $request->input('theme', 'theme-emerald'),
@@ -241,10 +245,7 @@ class DisplayMasjidController extends Controller
                 'isya'    => (int) $request->input('iqomah_isya', 10),
                 'jumat'   => (int) $request->input('iqomah_jumat', 15),
             ],
-            'running_texts' => !empty($runningTexts) ? array_values($runningTexts) : [
-                'Selamat datang di Masjid Al-Ikhlas • Mari makmurkan masjid dengan shalat berjamaah.',
-                'Harap menonaktifkan nada dering handphone (HP) saat berada di dalam ruang sholat.'
-            ]
+            'running_texts_html' => $runningTextHtml,
         ];
 
         $this->saveSettings($data);

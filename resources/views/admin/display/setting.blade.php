@@ -105,25 +105,54 @@
                         </div>
                     </div>
 
-                    <!-- Card 2: Running Text Ticker Pengumuman -->
+                    <!-- Card 2: Running Text Ticker Pengumuman (Summernote Rich Editor) -->
                     <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
-                            <i class="bi bi-badge-ad text-success fs-5"></i>
-                            <h5 class="fw-bold text-dark mb-0">2. Papan Teks Berjalan (Running Text Ticker)</h5>
+                        <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-badge-ad text-success fs-5"></i>
+                                <h5 class="fw-bold text-dark mb-0">2. Papan Teks Berjalan (Running Text Ticker)</h5>
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill small">
+                                <i class="bi bi-pencil-square me-1"></i> Summernote Editor
+                            </span>
                         </div>
                         <div class="card-body p-4">
-                            <label class="form-label fw-semibold text-dark">
-                                Daftar Pesan Berjalan di Bagian Bawah Layar TV:
+                            <label class="form-label fw-semibold text-dark mb-1">
+                                Kelola Pesan Berjalan di Layar TV (Mendukung Teks Tebal, Warna, Poin, & Paragraf):
                             </label>
-                            <p class="text-muted small mb-2">
-                                Masukkan satu pesan per baris (tekan <kbd>Enter</kbd> untuk baris baru). Teks akan otomatis berjalan berulang-ulang di TV.
+                            <p class="text-muted small mb-3">
+                                Setiap paragraf `<p>` atau poin `<li>` yang Anda buat di bawah ini akan otomatis berjalan secara horizontal di bagian bawah layar Smart TV dan dipisahkan dengan tanda bintang pemisah (✦).
                             </p>
+
+                            <!-- Quick Template Snippet Buttons -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill" onclick="appendTemplate('welcome')">
+                                    <i class="bi bi-plus-circle me-1"></i> + Sambutan Masjid
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="appendTemplate('infaq')">
+                                    <i class="bi bi-plus-circle me-1"></i> + Info Donasi & Bank
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" onclick="appendTemplate('hp')">
+                                    <i class="bi bi-plus-circle me-1"></i> + Himbauan Silent HP
+                                </button>
+                                <button type="button" class="btn btn-outline-info btn-sm rounded-pill" onclick="appendTemplate('hadits')">
+                                    <i class="bi bi-plus-circle me-1"></i> + Kutipan Hadits
+                                </button>
+                            </div>
+
                             @php
-                                $runningTextsRaw = implode("\n", $settings['running_texts'] ?? []);
+                                $runningTextContent = $settings['running_texts_html'] ?? '';
+                                if (empty($runningTextContent) && !empty($settings['running_texts'])) {
+                                    $runningTextContent = '<p>' . implode('</p><p>', $settings['running_texts']) . '</p>';
+                                }
                             @endphp
-                            <textarea name="running_texts_raw" class="form-control font-monospace" rows="5" placeholder="Tulis pengumuman baris per baris...">{{ old('running_texts_raw', $runningTextsRaw) }}</textarea>
+
+                            <div class="summernote-wrapper">
+                                <textarea name="running_texts_html" class="summernote" id="summernote_running_text">{{ old('running_texts_html', $runningTextContent) }}</textarea>
+                            </div>
+
                             <small class="text-muted d-block mt-2">
-                                💡 <em>Tips: Teks laporan kas saldo akhir dan agenda kegiatan terdekat sudah ditambahkan secara otomatis oleh sistem.</em>
+                                💡 <em>Informasi laporan saldo kas real-time dan agenda dakwah terdekat otomatis disinkronkan oleh sistem ke dalam running text.</em>
                             </small>
                         </div>
                     </div>
@@ -261,3 +290,49 @@
 </main>
 
 @include('layouts.footer')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof jQuery !== 'undefined' && typeof $.fn.summernote !== 'undefined') {
+            initSummernote();
+        } else {
+            window.addEventListener('load', initSummernote);
+        }
+
+        function initSummernote() {
+            $('#summernote_running_text').summernote({
+                placeholder: 'Ketik teks pengumuman di sini... Contoh: Selamat datang di Masjid Al-Ikhlas • Harap senyapkan nada dering HP.',
+                tabsize: 2,
+                height: 180,
+                dialogsInBody: true,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['font', ['strikethrough']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'hr']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+        }
+    });
+
+    // Helper functions to append snippet templates into Summernote
+    function appendTemplate(type) {
+        let snippet = '';
+        if (type === 'welcome') {
+            snippet = '<p>Selamat datang di <strong>{{ $profil->nama_masjid ?? 'Masjid Al-Ikhlas' }}</strong> • Mari makmurkan rumah Allah dengan shalat berjamaah dan menjaga ketertiban.</p>';
+        } else if (type === 'infaq') {
+            snippet = '<p>Infaq &amp; Sedekah Pembangunan: <strong>{{ $profil->nama_bank ?? 'Bank Syariah Indonesia' }}</strong> No. Rek: <strong>{{ $profil->nomor_rekening ?? '1234567890' }}</strong> a.n {{ $profil->atas_nama ?? 'Takmir Masjid' }} (Scan QRIS pada layar slide).</p>';
+        } else if (type === 'hp') {
+            snippet = '<p>Peringatan Ibadah: Harap <strong>menonaktifkan atau mengubah mode senyap</strong> pada nada dering handphone (HP) saat berada di ruang utama sholat.</p>';
+        } else if (type === 'hadits') {
+            snippet = '<p>Mutiara Hadits: <em>"Shalat berjamaah lebih utama daripada shalat sendirian dengan selisih dua puluh tujuh derajat."</em> (HR. Bukhari &amp; Muslim)</p>';
+        }
+
+        if (typeof $ !== 'undefined' && $('#summernote_running_text').length) {
+            const currentCode = $('#summernote_running_text').summernote('code');
+            $('#summernote_running_text').summernote('code', currentCode + snippet);
+        }
+    }
+</script>

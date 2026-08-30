@@ -68,8 +68,7 @@ class DisplayMasjidTest extends TestCase
             'iqomah_ashar' => 8,
             'iqomah_maghrib' => 7,
             'iqomah_isya' => 10,
-            'iqomah_jumat' => 15,
-            'running_texts_raw' => "Selamat datang jamaah masjid.\nHarap senyapkan HP saat sholat."
+            'running_texts_html' => "<p>Selamat datang di <strong>Masjid Al-Ikhlas</strong>.</p><p>Harap senyapkan HP saat sholat.</p>"
         ]);
 
         $postResponse->assertRedirect('/smart-tv/setting');
