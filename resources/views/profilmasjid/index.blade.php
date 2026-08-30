@@ -13,12 +13,17 @@
                 </ol>
             </nav>
         </div>
-        <!-- <a href="/" target="_blank" class="btn btn-outline-primary shadow-sm">
-            <i class="bi bi-globe me-1"></i> Lihat Tampilan Website
-        </a> -->
     </div><!-- End Page Title -->
 
     <div class="container-fluid px-0">
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+                <div>{{ session('success') }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
         <div class="row g-4">
             <!-- Left Side: Mosque Summary Badge Card -->
@@ -54,6 +59,17 @@
                                 <p class="text-dark small mb-0">{{ $profil->telepon ?? '-' }}</p>
                             </div>
 
+                            <div class="mb-3">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-1">
+                                    <i class="bi bi-bank2 text-primary me-1"></i> Rekening Donasi / Infaq:
+                                </span>
+                                <div class="bg-light p-2 rounded-2 border">
+                                    <small class="text-primary fw-bold d-block">{{ $profil->nama_bank ?? 'BANK SYARIAH INDONESIA (BSI)' }}</small>
+                                    <strong class="text-dark">{{ $profil->nomor_rekening ?? '7145-8890-2101' }}</strong>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">A.n: {{ $profil->atas_nama ?? 'Takmir Masjid Jami Al-Ikhlas' }}</small>
+                                </div>
+                            </div>
+
                             <div class="mb-0">
                                 <span class="text-muted small fw-bold text-uppercase d-block mb-1">
                                     <i class="bi bi-person-check-fill text-primary me-1"></i> Diperbarui Oleh:
@@ -81,7 +97,7 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#profile-edit" type="button" role="tab">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit Profil & Background
+                                    <i class="bi bi-pencil-square me-1"></i> Edit Profil, Rekening & Background
                                 </button>
                             </li>
                         </ul>
@@ -112,6 +128,32 @@
                                     <div class="col-lg-9 col-md-8">
                                         <div class="border rounded-3 p-1 bg-light d-inline-block" style="max-width: 280px;">
                                             <img src="{{ $profil->foto_masjid ? asset('storage/' . $profil->foto_masjid) : asset('assets-landing/img/hero-bg.jpg') }}" class="img-fluid rounded-2" style="max-height: 130px; object-fit: cover;" alt="Hero Background">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5 class="card-title text-dark fw-bold pt-3 pb-2 fs-5">Rekening Bank & Infaq Digital (Landing Page)</h5>
+                                <div class="p-3 bg-light rounded-3 mb-3 border">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Nama Bank:</small>
+                                            <strong class="text-dark">{{ $profil->nama_bank ?? 'BANK SYARIAH INDONESIA (BSI)' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Nomor Rekening:</small>
+                                            <strong class="text-success fs-6">{{ $profil->nomor_rekening ?? '7145-8890-2101' }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Atas Nama Rekening:</small>
+                                            <span class="text-dark fw-semibold">{{ $profil->atas_nama ?? 'Takmir Masjid Jami Al-Ikhlas' }}</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Judul Banner Infaq:</small>
+                                            <span class="text-dark fw-semibold">{{ $profil->judul_infaq ?? 'Salurkan Infaq Terbaik Anda' }}</span>
+                                        </div>
+                                        <div class="col-12">
+                                            <small class="text-muted d-block">Deskripsi Ajakan Infaq:</small>
+                                            <p class="mb-0 text-muted small">{{ $profil->deskripsi_infaq ?? 'Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.' }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -147,6 +189,10 @@
                                 <form action="{{ route('profilmasjid.update', $profil->id) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2">
                                     @csrf
                                     @method('PUT')
+
+                                    <div class="col-12">
+                                        <h6 class="fw-bold text-primary mb-0 border-bottom pb-2"><i class="bi bi-info-circle me-1"></i> 1. Identitas & Kontak Masjid</h6>
+                                    </div>
 
                                     <div class="col-md-7">
                                         <label class="form-label fw-bold small">Nama Masjid <span class="text-danger">*</span></label>
@@ -193,6 +239,54 @@
                                         <textarea name="alamat" class="form-control" rows="2" required placeholder="Dukuh, Desa, Kecamatan, Kabupaten...">{{ old('alamat', $profil->alamat) }}</textarea>
                                     </div>
 
+                                    <!-- Section 2: Rekening & Infaq Digital -->
+                                    <div class="col-12 mt-4">
+                                        <h6 class="fw-bold text-success mb-0 border-bottom pb-2"><i class="bi bi-bank me-1"></i> 2. Rekening Bank & Informasi Infaq Digital</h6>
+                                        <small class="text-muted">Data ini ditampilkan pada kartu Infaq / Shodaqoh di halaman publik Landing Page.</small>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Nama Bank</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-bank2"></i></span>
+                                            <input type="text" name="nama_bank" class="form-control" value="{{ old('nama_bank', $profil->nama_bank ?? 'BANK SYARIAH INDONESIA (BSI)') }}" placeholder="Contoh: BANK SYARIAH INDONESIA (BSI)" maxlength="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Nomor Rekening</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-credit-card"></i></span>
+                                            <input type="text" name="nomor_rekening" class="form-control fw-bold" value="{{ old('nomor_rekening', $profil->nomor_rekening ?? '7145-8890-2101') }}" placeholder="Contoh: 7145-8890-2101" maxlength="50">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Atas Nama Rekening</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-person-check"></i></span>
+                                            <input type="text" name="atas_nama" class="form-control" value="{{ old('atas_nama', $profil->atas_nama ?? 'Takmir Masjid Jami Al-Ikhlas') }}" placeholder="Contoh: Takmir Masjid Jami Al-Ikhlas" maxlength="100">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">Judul Banner Infaq</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-heart"></i></span>
+                                            <input type="text" name="judul_infaq" class="form-control" value="{{ old('judul_infaq', $profil->judul_infaq ?? 'Salurkan Infaq Terbaik Anda') }}" placeholder="Contoh: Salurkan Infaq Terbaik Anda" maxlength="150">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Deskripsi Ajakan Infaq</label>
+                                        <textarea name="deskripsi_infaq" class="form-control" rows="2" placeholder="Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim...">{{ old('deskripsi_infaq', $profil->deskripsi_infaq ?? 'Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.') }}</textarea>
+                                    </div>
+
+                                    <!-- Section 3: Sejarah, Visi, Misi -->
+                                    <div class="col-12 mt-4">
+                                        <h6 class="fw-bold text-dark mb-0 border-bottom pb-2"><i class="bi bi-journal-richtext me-1"></i> 3. Sejarah, Visi & Misi Masjid</h6>
+                                    </div>
+
                                     <div class="col-12">
                                         <label class="form-label fw-bold small">Sejarah Singkat Masjid</label>
                                         <textarea name="sejarah" class="form-control summernote" rows="5" placeholder="Tuliskan sejarah singkat pendirian masjid...">{{ old('sejarah', $profil->sejarah) }}</textarea>
@@ -210,7 +304,7 @@
 
                                     <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end">
                                         <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                                            <i class="bi bi-save me-1"></i> Simpan Perubahan Profil & Background
+                                            <i class="bi bi-save me-1"></i> Simpan Perubahan Profil, Rekening & Background
                                         </button>
                                     </div>
                                 </form>

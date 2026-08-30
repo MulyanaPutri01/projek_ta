@@ -1361,26 +1361,26 @@
                   </div>
                   <h6 class="fw-bold text-success mb-0 text-uppercase letter-spacing-1">Infaq / Shodaqoh</h6>
                 </div>
-                <h4 class="fw-bold text-dark mb-2">Salurkan Infaq Terbaik Anda</h4>
-                <p class="text-muted small mb-3">Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.</p>
+                <h4 class="fw-bold text-dark mb-2">{{ $profil->judul_infaq ?? 'Salurkan Infaq Terbaik Anda' }}</h4>
+                <p class="text-muted small mb-3">{{ $profil->deskripsi_infaq ?? 'Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.' }}</p>
 
                 <!-- Bank Account Pill -->
                 <div class="bg-white rounded-3 p-3 border mb-3 shadow-sm">
                   <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="badge bg-success-light text-success fw-bold">BANK SYARIAH INDONESIA (BSI)</span>
+                    <span class="badge bg-success-light text-success fw-bold">{{ $profil->nama_bank ?? 'BANK SYARIAH INDONESIA (BSI)' }}</span>
                     <i class="bi bi-bank fs-5 text-secondary"></i>
                   </div>
                   <div class="d-flex align-items-center justify-content-between mt-2">
                     <div>
                       <div class="text-muted" style="font-size: 0.72rem;">NOMOR REKENING MASJID</div>
-                      <strong class="fs-6 text-dark letter-spacing-1" id="rek-masjid-number">7145-8890-2101</strong>
+                      <strong class="fs-6 text-dark letter-spacing-1" id="rek-masjid-number">{{ $profil->nomor_rekening ?? '7145-8890-2101' }}</strong>
                     </div>
-                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 account-copy-btn" onclick="copyRekening('714588902101', this)">
+                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 account-copy-btn" onclick="copyRekening('{{ preg_replace('/[^0-9]/', '', $profil->nomor_rekening ?? '714588902101') }}', this)">
                       <i class="bi bi-clipboard me-1"></i> Salin
                     </button>
                   </div>
                   <small class="text-muted d-block mt-2 pt-2 border-top" style="font-size: 0.75rem;">
-                    A.n: <strong>Takmir {{ $profil->nama_masjid ?? 'Masjid Al-Ikhlas' }}</strong>
+                    A.n: <strong>{{ $profil->atas_nama ?? ('Takmir ' . ($profil->nama_masjid ?? 'Masjid Jami Al-Ikhlas')) }}</strong>
                   </small>
                 </div>
               </div>

@@ -15,6 +15,7 @@ class Donatur extends Model
         'tanggal',
         'nama_donatur',
         'alamat',
+        'telepon',
         'takmir_id',
     ];
 

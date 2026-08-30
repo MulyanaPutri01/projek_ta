@@ -18,6 +18,11 @@ class ProfilMasjid extends Model
         'misi',
         'alamat',
         'telepon',
+        'nama_bank',
+        'nomor_rekening',
+        'atas_nama',
+        'judul_infaq',
+        'deskripsi_infaq',
         'foto_masjid',
         'takmir_id',
     ];

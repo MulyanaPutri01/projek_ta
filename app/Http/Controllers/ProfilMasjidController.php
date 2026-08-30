@@ -44,13 +44,18 @@ class ProfilMasjidController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_masjid' => 'required|string|max:100',
-            'telepon'     => 'nullable|string|max:20',
-            'alamat'      => 'required|string|max:255',
-            'sejarah'     => 'nullable|string',
-            'visi'        => 'nullable|string',
-            'misi'        => 'nullable|string',
-            'foto_masjid' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'nama_masjid'    => 'required|string|max:100',
+            'telepon'        => 'nullable|string|max:20',
+            'alamat'         => 'required|string|max:255',
+            'nama_bank'      => 'nullable|string|max:100',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'atas_nama'      => 'nullable|string|max:100',
+            'judul_infaq'    => 'nullable|string|max:150',
+            'deskripsi_infaq'=> 'nullable|string',
+            'sejarah'        => 'nullable|string',
+            'visi'           => 'nullable|string',
+            'misi'           => 'nullable|string',
+            'foto_masjid'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ], [
             'nama_masjid.required' => 'Nama masjid wajib diisi.',
             'alamat.required'      => 'Alamat masjid wajib diisi.',
@@ -59,13 +64,18 @@ class ProfilMasjidController extends Controller
         ]);
 
         $profil = ProfilMasjid::findOrFail($id);
-        $profil->nama_masjid = $request->nama_masjid;
-        $profil->telepon     = $request->telepon;
-        $profil->alamat      = $request->alamat;
-        $profil->sejarah     = $request->sejarah;
-        $profil->visi        = $request->visi;
-        $profil->misi        = $request->misi;
-        $profil->takmir_id   = Auth::id() ?? $profil->takmir_id;
+        $profil->nama_masjid     = $request->nama_masjid;
+        $profil->telepon         = $request->telepon;
+        $profil->alamat          = $request->alamat;
+        $profil->nama_bank       = $request->nama_bank ?? 'BANK SYARIAH INDONESIA (BSI)';
+        $profil->nomor_rekening  = $request->nomor_rekening ?? '7145-8890-2101';
+        $profil->atas_nama       = $request->atas_nama ?? 'Takmir Masjid Jami Al-Ikhlas';
+        $profil->judul_infaq     = $request->judul_infaq ?? 'Salurkan Infaq Terbaik Anda';
+        $profil->deskripsi_infaq = $request->deskripsi_infaq ?? 'Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.';
+        $profil->sejarah         = $request->sejarah;
+        $profil->visi            = $request->visi;
+        $profil->misi            = $request->misi;
+        $profil->takmir_id       = Auth::id() ?? $profil->takmir_id;
 
         // Hapus foto jika dicentang
         if ($request->has('hapus_foto') && $request->hapus_foto == '1') {

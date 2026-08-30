@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
-
 use Tests\TestCase;
 use App\Models\Takmir;
 use App\Models\Kegiatan;
+use App\Models\ProfilMasjid;
+use App\Models\Donatur;
+use App\Models\Keuangan;
 
 class AuditAllFeaturesTest extends TestCase
 {
@@ -30,10 +32,13 @@ class AuditAllFeaturesTest extends TestCase
         })->first() ?? $this->adminUser;
     }
 
-    /** Test public frontend routes */
-    public function test_public_routes_accessible()
+    /** Test public frontend routes and dynamic infaq / bank details */
+    public function test_public_routes_accessible_and_dynamic_infaq()
     {
-        $this->get('/')->assertStatus(200);
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Infaq / Shodaqoh');
+
         $this->get('/kegiatan-calendar')->assertStatus(200);
         $this->get('/api/kegiatan')->assertStatus(200);
         $this->get('/login')->assertStatus(200);
@@ -57,6 +62,7 @@ class AuditAllFeaturesTest extends TestCase
         $this->get('/keuangan')->assertStatus(200);
         $this->get('/keuangan/create')->assertStatus(200);
         $this->get('/donatur')->assertStatus(200);
+        $this->get('/donatur/create')->assertStatus(200);
         $this->get('/kategori')->assertStatus(200);
         $this->get('/laporan-keuangan')->assertStatus(200);
         $this->get('/laporan-cetak')->assertStatus(200);
@@ -137,7 +143,7 @@ class AuditAllFeaturesTest extends TestCase
         $this->getJson('/galeri', $headers)->assertStatus(200);
     }
 
-    /** Test CRUD operations for key modules */
+    /** Test CRUD operations for key modules including Donatur and Profil Masjid */
     public function test_crud_operations()
     {
         if (!$this->adminUser) {
@@ -146,37 +152,71 @@ class AuditAllFeaturesTest extends TestCase
 
         $this->actingAs($this->adminUser);
 
-        // 1. Test Donatur CRUD
+        // 1. Test Donatur CRUD with Telepon
         $donaturResponse = $this->post('/donatur', [
             'tanggal' => now()->toDateString(),
-            'nama_donatur' => 'Test Audit Donatur',
-            'alamat' => 'Jl. Test Audit No. 123',
+            'nama_donatur' => 'H. Hidayatullah Test',
+            'alamat' => 'Jl. Merdeka No. 123',
+            'telepon' => '081298765432',
         ]);
         $donaturResponse->assertRedirect('/donatur');
 
-        $donatur = \App\Models\Donatur::where('nama_donatur', 'Test Audit Donatur')->first();
+        $donatur = Donatur::where('nama_donatur', 'H. Hidayatullah Test')->first();
         $this->assertNotNull($donatur);
+        $this->assertEquals('081298765432', $donatur->telepon);
+
+        // Test Donatur Edit Page
+        $this->get("/donatur/{$donatur->id}/edit")->assertStatus(200);
 
         $updateDonatur = $this->put("/donatur/{$donatur->id}", [
             'tanggal' => now()->toDateString(),
-            'nama_donatur' => 'Test Audit Donatur Updated',
-            'alamat' => 'Jl. Test Audit No. 456',
+            'nama_donatur' => 'H. Hidayatullah Test Updated',
+            'alamat' => 'Jl. Merdeka No. 456',
+            'telepon' => '081298765999',
         ]);
         $updateDonatur->assertRedirect('/donatur');
 
-        // 2. Test Keuangan CRUD
+        // Test DataTables AJAX with search query on Donatur
+        $dtSearchResponse = $this->getJson('/donatur?search[value]=Hidayatullah', ['X-Requested-With' => 'XMLHttpRequest']);
+        $dtSearchResponse->assertStatus(200);
+
+        // 2. Test Keuangan CRUD with Donatur relation
         $keuanganResponse = $this->post('/keuangan', [
             'tanggal' => now()->toDateString(),
-            'sumber_keuangan' => 'Infaq Audit Test',
-            'keterangan' => 'Keterangan Infaq Test',
-            'nominal' => 500000,
+            'sumber_keuangan' => 'Infaq Donatur Test',
+            'keterangan' => 'Infaq dari donatur tetap',
+            'nominal' => 750000,
             'kategori_id' => 1,
             'donatur_id' => $donatur->id,
         ]);
         $keuanganResponse->assertRedirect(route('keuangan.index'));
 
-        $keuangan = \App\Models\Keuangan::where('sumber_keuangan', 'Infaq Audit Test')->first();
+        $keuangan = Keuangan::where('sumber_keuangan', 'Infaq Donatur Test')->first();
         $this->assertNotNull($keuangan);
+
+        // 3. Test Profil Masjid Bank Account & Infaq Update
+        $profil = ProfilMasjid::first();
+        if ($profil) {
+            $profilResponse = $this->put("/profilmasjid/{$profil->id}", [
+                'nama_masjid' => $profil->nama_masjid,
+                'alamat' => $profil->alamat,
+                'telepon' => $profil->telepon,
+                'nama_bank' => 'BANK SYARIAH INDONESIA (BSI)',
+                'nomor_rekening' => '7145-8890-2101',
+                'atas_nama' => 'Takmir Masjid Jami Al-Ikhlas',
+                'judul_infaq' => 'Salurkan Infaq Terbaik Anda',
+                'deskripsi_infaq' => 'Dukung kemakmuran masjid, kegiatan dakwah, santunan yatim, dan pemeliharaan fasilitas masjid.',
+            ]);
+            $profilResponse->assertRedirect(route('profilmasjid.index'));
+
+            // Verify Landing Page has the updated dynamic database values
+            $landingResponse = $this->get('/');
+            $landingResponse->assertStatus(200);
+            $landingResponse->assertSee('BANK SYARIAH INDONESIA (BSI)');
+            $landingResponse->assertSee('7145-8890-2101');
+            $landingResponse->assertSee('Takmir Masjid Jami Al-Ikhlas');
+            $landingResponse->assertSee('Salurkan Infaq Terbaik Anda');
+        }
 
         // Cleanup test data
         $this->delete("/keuangan/{$keuangan->id}");
