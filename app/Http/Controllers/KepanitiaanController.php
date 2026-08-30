@@ -119,6 +119,34 @@ class KepanitiaanController extends Controller
             return 5;
         });
 
+        // Specific roles for hierarchical tree organigram
+        $ketuaList = $panitiaList->filter(function($p) {
+            $nama = strtolower($p->posisi?->nama_posisi ?? '');
+            return str_contains($nama, 'ketua') && !str_contains($nama, 'wakil');
+        });
+
+        $wakilList = $panitiaList->filter(function($p) {
+            $nama = strtolower($p->posisi?->nama_posisi ?? '');
+            return str_contains($nama, 'wakil');
+        });
+
+        $sekretarisList = $panitiaList->filter(function($p) {
+            $nama = strtolower($p->posisi?->nama_posisi ?? '');
+            return str_contains($nama, 'sekretaris');
+        });
+
+        $bendaharaList = $panitiaList->filter(function($p) {
+            $nama = strtolower($p->posisi?->nama_posisi ?? '');
+            return str_contains($nama, 'bendahara');
+        });
+
+        $pimpinanLainnya = $pimpinanInti->reject(function($p) use ($ketuaList, $wakilList, $sekretarisList, $bendaharaList) {
+            return $ketuaList->contains('id', $p->id) 
+                || $wakilList->contains('id', $p->id) 
+                || $sekretarisList->contains('id', $p->id) 
+                || $bendaharaList->contains('id', $p->id);
+        });
+
         $seksiSeksi = $panitiaList->reject(function($p) use ($pimpinanInti) {
             return $pimpinanInti->contains('id', $p->id);
         })->groupBy('posisi_id');
@@ -130,6 +158,7 @@ class KepanitiaanController extends Controller
             'kegiatans', 'posisis', 'takmirs', 
             'selectedKegiatanId', 'selectedKegiatan', 
             'panitiaList', 'pimpinanInti', 'seksiSeksi',
+            'ketuaList', 'wakilList', 'sekretarisList', 'bendaharaList', 'pimpinanLainnya',
             'totalPanitiaSemua', 'totalKegiatanAktif'
         ));
     }

@@ -719,3 +719,164 @@ table.dataTable tbody tr:hover {
     background: linear-gradient(to right, transparent, #cbd5e1, transparent);
     margin: 1.5rem 0;
 }
+
+/* ========================================================
+   Organizational Chart Tree System (Bagan Struktur Organisasi)
+   ======================================================== */
+.org-chart-wrapper {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    padding: 35px 25px;
+    overflow-x: auto;
+    min-height: 480px;
+    position: relative;
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.org-chart-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 850px;
+    margin: 0 auto;
+    position: relative;
+    padding: 10px 10px 40px 10px;
+}
+
+/* Node Cards */
+.org-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    padding: 16px 18px;
+    width: 280px;
+    max-width: 300px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 5;
+    text-align: left;
+}
+
+.org-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.org-card.card-ketua {
+    border-top: 5px solid #10b981 !important;
+    border-color: #a7f3d0;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+}
+
+.org-card.card-wakil {
+    border-top: 5px solid #059669 !important;
+    border-color: #cbd5e1;
+}
+
+.org-card.card-sekretaris {
+    border-top: 5px solid #0284c7 !important;
+    border-color: #bae6fd;
+}
+
+.org-card.card-bendahara {
+    border-top: 5px solid #d97706 !important;
+    border-color: #fde68a;
+}
+
+.org-card-section {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+    border-top: 4px solid #6366f1 !important;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    width: 270px;
+    min-width: 250px;
+    max-width: 300px;
+    position: relative;
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.org-card-section:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+    border-color: #c7d2fe;
+}
+
+/* Connecting Branch Lines */
+.org-line-vertical {
+    width: 2.5px;
+    height: 38px;
+    background-color: #94a3b8;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.org-line-vertical::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 7px;
+    height: 7px;
+    background-color: #065f46;
+    border-radius: 50%;
+}
+
+.org-level-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    position: relative;
+    width: 100%;
+}
+
+.org-sections-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+    position: relative;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+/* Horizontal Crossbars */
+.org-crossbar {
+    height: 2.5px;
+    background-color: #94a3b8;
+    position: absolute;
+    top: 0;
+    z-index: 2;
+}
+
+.org-branch-stem {
+    width: 2.5px;
+    height: 28px;
+    background-color: #94a3b8;
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.org-branch-stem::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background-color: #0284c7;
+    border-radius: 50%;
+}
+

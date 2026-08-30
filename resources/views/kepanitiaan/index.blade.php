@@ -94,7 +94,7 @@
         <ul class="nav nav-pills mb-3 border-bottom pb-2" id="kepanitiaanTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active fw-semibold" id="organigram-tab" data-bs-toggle="tab" data-bs-target="#organigram-view" type="button" role="tab">
-                    <i class="bi bi-diagram-3-fill me-1"></i> Bagan Struktur & Kartu Panitia (Visual)
+                    <i class="bi bi-diagram-3-fill me-1"></i> Bagan Struktur Organisasi (Bagan Pohon)
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -112,9 +112,9 @@
                 @if($panitiaList->isEmpty())
                     <div class="card border-0 shadow-sm text-center py-5">
                         <div class="card-body">
-                            <i class="bi bi-people text-muted" style="font-size: 3.5rem;"></i>
+                            <i class="bi bi-diagram-3 text-muted" style="font-size: 3.5rem;"></i>
                             <h5 class="fw-bold text-dark mt-3">Belum Ada Susunan Panitia</h5>
-                            <p class="text-muted small">Susunan kepanitiaan untuk kegiatan <strong>{{ $selectedKegiatan ? $selectedKegiatan->nama_kegiatan : '' }}</strong> belum ditambahkan.</p>
+                            <p class="text-muted small">Susunan bagan kepanitiaan untuk kegiatan <strong>{{ $selectedKegiatan ? $selectedKegiatan->nama_kegiatan : '' }}</strong> belum ditambahkan.</p>
                             <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#kepanitiaanCreateModal">
                                 <i class="bi bi-person-plus me-1"></i> Bentuk Panitia Sekarang
                             </button>
@@ -122,149 +122,528 @@
                     </div>
                 @else
 
-                    <!-- A. PIMPINAN INTI (CORE COMMITTEE) -->
-                    @if($pimpinanInti->isNotEmpty())
-                        <div class="mb-4">
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-star-fill me-1"></i> TIER 1</span>
-                                <h5 class="fw-bold text-dark mb-0">Pimpinan Inti & Koordinator Utama</h5>
+                    <!-- Sub-view Mode Controls (Tree vs Grid) -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-light text-success fw-bold px-3 py-2 rounded-pill">
+                                <i class="bi bi-diagram-3-fill me-1"></i> BAGAN STRUKTUR ORGANISASI
+                            </span>
+                            <small class="text-muted d-none d-md-inline">Hierarki Komando & Koordinasi Panitia Kegiatan</small>
+                        </div>
+
+                        <div class="btn-group btn-group-sm shadow-sm" role="group">
+                            <button type="button" class="btn btn-outline-success active fw-semibold" id="btnViewTree" onclick="switchOrganigramView('tree')">
+                                <i class="bi bi-diagram-3 me-1"></i> Bagan Pohon (Hierarki)
+                            </button>
+                            <button type="button" class="btn btn-outline-success fw-semibold" id="btnViewGrid" onclick="switchOrganigramView('grid')">
+                                <i class="bi bi-grid-fill me-1"></i> Tampilan Kartu (Grid)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ================= 1. HIERARCHICAL TREE ORGANIGRAM (BAGAN POHON RESMI) ================= -->
+                    <div id="wrapper-tree-view">
+                        <div class="org-chart-wrapper mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 text-muted small px-2">
+                                <span><i class="bi bi-info-circle text-primary me-1"></i> Bagan Struktur Kepanitiaan <strong>{{ $selectedKegiatan ? $selectedKegiatan->nama_kegiatan : '' }}</strong></span>
+                                <span class="d-inline-flex align-items-center gap-1"><i class="bi bi-arrows-expand"></i> Geser horizontal jika bagan melebar</span>
                             </div>
 
-                            <div class="row g-3">
-                                @foreach($pimpinanInti as $item)
-                                    @php
-                                        $namaPosisi = strtolower($item->posisi?->nama_posisi ?? '');
-                                        $borderClass = 'border-success';
-                                        $badgeBg = 'bg-success';
-                                        $iconClass = 'bi-award-fill';
+                            <div class="org-chart-tree">
 
-                                        if (str_contains($namaPosisi, 'ketua')) {
+                                <!-- LEVEL 1: TOP ROOT - KETUA PANITIA & WAKIL KETUA -->
+                                <div class="d-flex justify-content-center align-items-center gap-4 position-relative">
+                                    @forelse($ketuaList as $ketua)
+                                        <div class="org-card card-ketua">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <span class="badge bg-success text-white small text-uppercase">
+                                                    <i class="bi bi-person-crown me-1"></i> {{ $ketua->posisi?->nama_posisi ?? 'Ketua Panitia' }}
+                                                </span>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                        <li>
+                                                            <button class="dropdown-item btn-edit" 
+                                                                data-id="{{ $ketua->id }}" 
+                                                                data-kegiatan="{{ $ketua->kegiatan_id }}" 
+                                                                data-posisi="{{ $ketua->posisi_id }}" 
+                                                                data-takmir="{{ $ketua->takmir_id }}" 
+                                                                data-jobdesk="{{ e($ketua->jobdesk) }}">
+                                                                <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ route('kepanitiaan.destroy', $ketua->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex align-items-center gap-3 my-2">
+                                                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 48px; height: 48px; border: 2px solid rgba(16, 185, 129, 0.3);">
+                                                    {{ strtoupper(substr($ketua->takmir?->nama_takmir ?? 'K', 0, 1)) }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0 fs-6">{{ $ketua->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                    <small class="text-muted d-block" style="font-size: 0.78rem;"><i class="bi bi-telephone me-1 text-success"></i>{{ $ketua->takmir?->telepon ?? '-' }}</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-light p-2.5 rounded-3 mt-2 border">
+                                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;"><i class="bi bi-clipboard-check me-1 text-success"></i>Tugas & Tanggung Jawab:</small>
+                                                <span class="small text-dark" style="font-size: 0.82rem; line-height: 1.4;">{{ $ketua->jobdesk }}</span>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        @if($pimpinanInti->isEmpty())
+                                            <div class="badge bg-light text-muted border p-2">Pimpinan Inti Belum Ditetapkan</div>
+                                        @endif
+                                    @endforelse
+
+                                    @foreach($wakilList as $wakil)
+                                        <div class="org-card card-wakil">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <span class="badge bg-success bg-opacity-75 text-white small text-uppercase">
+                                                    <i class="bi bi-person-badge me-1"></i> {{ $wakil->posisi?->nama_posisi ?? 'Wakil Ketua' }}
+                                                </span>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                        <li>
+                                                            <button class="dropdown-item btn-edit" 
+                                                                data-id="{{ $wakil->id }}" 
+                                                                data-kegiatan="{{ $wakil->kegiatan_id }}" 
+                                                                data-posisi="{{ $wakil->posisi_id }}" 
+                                                                data-takmir="{{ $wakil->takmir_id }}" 
+                                                                data-jobdesk="{{ e($wakil->jobdesk) }}">
+                                                                <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <form action="{{ route('kepanitiaan.destroy', $wakil->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex align-items-center gap-3 my-2">
+                                                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 48px; height: 48px;">
+                                                    {{ strtoupper(substr($wakil->takmir?->nama_takmir ?? 'W', 0, 1)) }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0 fs-6">{{ $wakil->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                    <small class="text-muted d-block" style="font-size: 0.78rem;"><i class="bi bi-telephone me-1 text-success"></i>{{ $wakil->takmir?->telepon ?? '-' }}</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-light p-2.5 rounded-3 mt-2 border">
+                                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;"><i class="bi bi-clipboard-check me-1 text-success"></i>Tugas & Tanggung Jawab:</small>
+                                                <span class="small text-dark" style="font-size: 0.82rem; line-height: 1.4;">{{ $wakil->jobdesk }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <!-- STEM LINE FROM LEVEL 1 TO LEVEL 2 -->
+                                @if($sekretarisList->isNotEmpty() || $bendaharaList->isNotEmpty() || $seksiSeksi->isNotEmpty())
+                                    <div class="org-line-vertical"></div>
+                                @endif
+
+                                <!-- LEVEL 2: MIDDLE TIER - SEKRETARIS & BENDAHARA -->
+                                @if($sekretarisList->isNotEmpty() || $bendaharaList->isNotEmpty() || $pimpinanLainnya->isNotEmpty())
+                                    <div class="position-relative w-100 mb-0">
+                                        <!-- Top Distributor Line for Level 2 -->
+                                        @php
+                                            $level2Count = $sekretarisList->count() + $bendaharaList->count() + $pimpinanLainnya->count();
+                                        @endphp
+
+                                        <div class="d-flex justify-content-center align-items-start gap-4 flex-wrap position-relative">
+                                            
+                                            <!-- SEKRETARIS COLUMN -->
+                                            @foreach($sekretarisList as $sekretaris)
+                                                <div class="position-relative pt-3">
+                                                    <div class="tree-branch-down" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);"></div>
+                                                    <div class="org-card card-sekretaris">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <span class="badge bg-info text-dark small text-uppercase">
+                                                                <i class="bi bi-pencil-square me-1"></i> {{ $sekretaris->posisi?->nama_posisi ?? 'Sekretaris' }}
+                                                            </span>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                                    <li>
+                                                                        <button class="dropdown-item btn-edit" 
+                                                                            data-id="{{ $sekretaris->id }}" 
+                                                                            data-kegiatan="{{ $sekretaris->kegiatan_id }}" 
+                                                                            data-posisi="{{ $sekretaris->posisi_id }}" 
+                                                                            data-takmir="{{ $sekretaris->takmir_id }}" 
+                                                                            data-jobdesk="{{ e($sekretaris->jobdesk) }}">
+                                                                            <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <form action="{{ route('kepanitiaan.destroy', $sekretaris->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center gap-3 my-2">
+                                                            <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 46px; height: 46px; border: 2px solid rgba(14, 165, 233, 0.3);">
+                                                                {{ strtoupper(substr($sekretaris->takmir?->nama_takmir ?? 'S', 0, 1)) }}
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="fw-bold text-dark mb-0 fs-6">{{ $sekretaris->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                                <small class="text-muted d-block" style="font-size: 0.78rem;"><i class="bi bi-telephone me-1 text-info"></i>{{ $sekretaris->takmir?->telepon ?? '-' }}</small>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="bg-light p-2.5 rounded-3 mt-2 border">
+                                                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;"><i class="bi bi-card-checklist me-1 text-info"></i>Uraian Tugas / Jobdesk:</small>
+                                                            <span class="small text-dark" style="font-size: 0.82rem; line-height: 1.4;">{{ $sekretaris->jobdesk }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            <!-- BENDAHARA COLUMN -->
+                                            @foreach($bendaharaList as $bendahara)
+                                                <div class="position-relative pt-3">
+                                                    <div class="tree-branch-down" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);"></div>
+                                                    <div class="org-card card-bendahara">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <span class="badge bg-warning text-dark small text-uppercase">
+                                                                <i class="bi bi-wallet-fill me-1"></i> {{ $bendahara->posisi?->nama_posisi ?? 'Bendahara' }}
+                                                            </span>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                                    <li>
+                                                                        <button class="dropdown-item btn-edit" 
+                                                                            data-id="{{ $bendahara->id }}" 
+                                                                            data-kegiatan="{{ $bendahara->kegiatan_id }}" 
+                                                                            data-posisi="{{ $bendahara->posisi_id }}" 
+                                                                            data-takmir="{{ $bendahara->takmir_id }}" 
+                                                                            data-jobdesk="{{ e($bendahara->jobdesk) }}">
+                                                                            <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <form action="{{ route('kepanitiaan.destroy', $bendahara->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center gap-3 my-2">
+                                                            <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 46px; height: 46px; border: 2px solid rgba(245, 158, 11, 0.3);">
+                                                                {{ strtoupper(substr($bendahara->takmir?->nama_takmir ?? 'B', 0, 1)) }}
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="fw-bold text-dark mb-0 fs-6">{{ $bendahara->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                                <small class="text-muted d-block" style="font-size: 0.78rem;"><i class="bi bi-telephone me-1 text-warning"></i>{{ $bendahara->takmir?->telepon ?? '-' }}</small>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="bg-light p-2.5 rounded-3 mt-2 border">
+                                                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;"><i class="bi bi-cash-stack me-1 text-warning"></i>Uraian Tugas / Jobdesk:</small>
+                                                            <span class="small text-dark" style="font-size: 0.82rem; line-height: 1.4;">{{ $bendahara->jobdesk }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            <!-- OTHER CORE MEMBERS -->
+                                            @foreach($pimpinanLainnya as $other)
+                                                <div class="position-relative pt-3">
+                                                    <div class="tree-branch-down" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);"></div>
+                                                    <div class="org-card" style="border-top: 5px solid #64748b !important;">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <span class="badge bg-secondary text-white small text-uppercase">
+                                                                <i class="bi bi-person-badge me-1"></i> {{ $other->posisi?->nama_posisi ?? 'Koordinator' }}
+                                                            </span>
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                                    <li>
+                                                                        <button class="dropdown-item btn-edit" 
+                                                                            data-id="{{ $other->id }}" 
+                                                                            data-kegiatan="{{ $other->kegiatan_id }}" 
+                                                                            data-posisi="{{ $other->posisi_id }}" 
+                                                                            data-takmir="{{ $other->takmir_id }}" 
+                                                                            data-jobdesk="{{ e($other->jobdesk) }}">
+                                                                            <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <form action="{{ route('kepanitiaan.destroy', $other->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                                        </form>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center gap-3 my-2">
+                                                            <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 46px; height: 46px;">
+                                                                {{ strtoupper(substr($other->takmir?->nama_takmir ?? 'O', 0, 1)) }}
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="fw-bold text-dark mb-0 fs-6">{{ $other->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                                <small class="text-muted d-block" style="font-size: 0.78rem;">{{ $other->takmir?->telepon ?? '-' }}</small>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="bg-light p-2.5 rounded-3 mt-2 border">
+                                                            <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;">Uraian Tugas / Jobdesk:</small>
+                                                            <span class="small text-dark" style="font-size: 0.82rem; line-height: 1.4;">{{ $other->jobdesk }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- STEM LINE FROM LEVEL 2 TO LEVEL 3 -->
+                                @if($seksiSeksi->isNotEmpty())
+                                    <div class="org-line-vertical" style="height: 46px;"></div>
+                                @endif
+
+                                <!-- LEVEL 3: SECTIONS / DIVISI OPERASIONAL (TREE LEAF NODES) -->
+                                @if($seksiSeksi->isNotEmpty())
+                                    <div class="position-relative w-100">
+                                        <div class="text-center mb-3">
+                                            <span class="badge bg-primary text-white px-3 py-1.5 rounded-pill shadow-sm" style="letter-spacing: 0.5px;">
+                                                <i class="bi bi-grid-3x3-gap-fill me-1"></i> DIVISI & SEKSI OPERASIONAL LAPANGAN
+                                            </span>
+                                        </div>
+
+                                        <div class="org-sections-row">
+                                            @foreach($seksiSeksi as $posisiId => $members)
+                                                @php $posisiFirst = $members->first()->posisi; @endphp
+                                                <div class="position-relative pt-3">
+                                                    <div class="tree-branch-down" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%);"></div>
+                                                    
+                                                    <div class="org-card-section">
+                                                        <div class="card-header bg-light border-0 py-2.5 px-3 d-flex justify-content-between align-items-center rounded-top-4">
+                                                            <span class="fw-bold text-dark small text-uppercase d-flex align-items-center gap-1.5">
+                                                                <i class="bi bi-tag-fill text-primary"></i> {{ $posisiFirst?->nama_posisi ?? 'Seksi Operasional' }}
+                                                            </span>
+                                                            <span class="badge bg-primary-subtle text-primary fw-bold" style="font-size: 0.7rem;">{{ $members->count() }} Anggota</span>
+                                                        </div>
+                                                        
+                                                        <div class="p-3">
+                                                            <ul class="list-group list-group-flush">
+                                                                @foreach($members as $m)
+                                                                    <li class="list-group-item px-0 py-2.5 border-bottom d-flex justify-content-between align-items-start bg-transparent">
+                                                                        <div class="d-flex gap-2">
+                                                                            <div class="rounded-circle bg-primary bg-opacity-10 border text-primary d-flex align-items-center justify-content-center fw-bold small mt-0.5 flex-shrink-0" style="width: 32px; height: 32px;">
+                                                                                {{ strtoupper(substr($m->takmir?->nama_takmir ?? 'P', 0, 1)) }}
+                                                                            </div>
+                                                                            <div>
+                                                                                <div class="fw-bold text-dark small">{{ $m->takmir?->nama_takmir ?? 'Petugas Takmir' }}</div>
+                                                                                <small class="text-muted d-block" style="font-size: 0.75rem; line-height: 1.35;">
+                                                                                    <i class="bi bi-check-circle-fill text-success me-1"></i>{{ $m->jobdesk }}
+                                                                                </small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="d-flex gap-1 ms-2">
+                                                                            <button type="button" class="btn btn-light btn-xs p-1 text-warning btn-edit" 
+                                                                                data-id="{{ $m->id }}" 
+                                                                                data-kegiatan="{{ $m->kegiatan_id }}" 
+                                                                                data-posisi="{{ $m->posisi_id }}" 
+                                                                                data-takmir="{{ $m->takmir_id }}" 
+                                                                                data-jobdesk="{{ e($m->jobdesk) }}"
+                                                                                title="Edit">
+                                                                                <i class="bi bi-pencil"></i>
+                                                                            </button>
+                                                                            <form action="{{ route('kepanitiaan.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Hapus anggota?')">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit" class="btn btn-light btn-xs p-1 text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= 2. ALTERNATIVE CARD GRID VIEW ================= -->
+                    <div id="wrapper-grid-view" style="display: none;">
+                        <!-- A. PIMPINAN INTI (CORE COMMITTEE) -->
+                        @if($pimpinanInti->isNotEmpty())
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-star-fill me-1"></i> TIER 1</span>
+                                    <h5 class="fw-bold text-dark mb-0">Pimpinan Inti & Koordinator Utama</h5>
+                                </div>
+
+                                <div class="row g-3">
+                                    @foreach($pimpinanInti as $item)
+                                        @php
+                                            $namaPosisi = strtolower($item->posisi?->nama_posisi ?? '');
                                             $borderClass = 'border-success';
                                             $badgeBg = 'bg-success';
-                                            $iconClass = 'bi-person-crown';
-                                        } elseif (str_contains($namaPosisi, 'sekretaris')) {
-                                            $borderClass = 'border-info';
-                                            $badgeBg = 'bg-info text-dark';
-                                            $iconClass = 'bi-pencil-square';
-                                        } elseif (str_contains($namaPosisi, 'bendahara')) {
-                                            $borderClass = 'border-warning';
-                                            $badgeBg = 'bg-warning text-dark';
-                                            $iconClass = 'bi-wallet-fill';
-                                        }
-                                    @endphp
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden" style="border-top: 4px solid var(--bs-{{ str_contains($namaPosisi, 'ketua') ? 'success' : (str_contains($namaPosisi, 'sekretaris') ? 'info' : 'warning') }}) !important;">
-                                            <div class="card-body p-3">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <span class="badge {{ $badgeBg }} small text-uppercase">
-                                                        <i class="bi {{ $iconClass }} me-1"></i> {{ $item->posisi?->nama_posisi ?? 'Panitia' }}
+                                            $iconClass = 'bi-award-fill';
+
+                                            if (str_contains($namaPosisi, 'ketua')) {
+                                                $borderClass = 'border-success';
+                                                $badgeBg = 'bg-success';
+                                                $iconClass = 'bi-person-crown';
+                                            } elseif (str_contains($namaPosisi, 'sekretaris')) {
+                                                $borderClass = 'border-info';
+                                                $badgeBg = 'bg-info text-dark';
+                                                $iconClass = 'bi-pencil-square';
+                                            } elseif (str_contains($namaPosisi, 'bendahara')) {
+                                                $borderClass = 'border-warning';
+                                                $badgeBg = 'bg-warning text-dark';
+                                                $iconClass = 'bi-wallet-fill';
+                                            }
+                                        @endphp
+                                        <div class="col-md-6 col-lg-3">
+                                            <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden" style="border-top: 4px solid var(--bs-{{ str_contains($namaPosisi, 'ketua') ? 'success' : (str_contains($namaPosisi, 'sekretaris') ? 'info' : 'warning') }}) !important;">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <span class="badge {{ $badgeBg }} small text-uppercase">
+                                                            <i class="bi {{ $iconClass }} me-1"></i> {{ $item->posisi?->nama_posisi ?? 'Panitia' }}
+                                                        </span>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                                <li>
+                                                                    <button class="dropdown-item btn-edit" 
+                                                                        data-id="{{ $item->id }}" 
+                                                                        data-kegiatan="{{ $item->kegiatan_id }}" 
+                                                                        data-posisi="{{ $item->posisi_id }}" 
+                                                                        data-takmir="{{ $item->takmir_id }}" 
+                                                                        data-jobdesk="{{ e($item->jobdesk) }}">
+                                                                        <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <form action="{{ route('kepanitiaan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
+                                                                    </form>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex align-items-center gap-3 my-2">
+                                                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 46px; height: 46px;">
+                                                            {{ strtoupper(substr($item->takmir?->nama_takmir ?? 'P', 0, 1)) }}
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="fw-bold text-dark mb-0">{{ $item->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
+                                                            <small class="text-muted">{{ $item->takmir?->telepon ?? 'Takmir Masjid' }}</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="bg-light p-2 rounded-2 mt-2">
+                                                        <small class="text-muted d-block fw-semibold" style="font-size: 0.72rem;">Uraian Tugas / Jobdesk:</small>
+                                                        <span class="small text-dark">{{ $item->jobdesk }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- B. DIVISI / SEKSI OPERASIONAL (OPERATIONAL SECTIONS) -->
+                        @if($seksiSeksi->isNotEmpty())
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="badge bg-primary px-2 py-1"><i class="bi bi-grid-fill me-1"></i> TIER 2</span>
+                                    <h5 class="fw-bold text-dark mb-0">Divisi / Seksi-Seksi Operasional Lapangan</h5>
+                                </div>
+
+                                <div class="row g-3">
+                                    @foreach($seksiSeksi as $posisiId => $members)
+                                        @php $posisiFirst = $members->first()->posisi; @endphp
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card h-100 border-0 shadow-sm">
+                                                <div class="card-header bg-light border-0 py-2.5 d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-dark small text-uppercase">
+                                                        <i class="bi bi-tag-fill me-1 text-primary"></i> {{ $posisiFirst?->nama_posisi ?? 'Seksi Operasional' }}
                                                     </span>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-light btn-sm py-0 px-1 text-muted" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                                            <li>
-                                                                <button class="dropdown-item btn-edit" 
-                                                                    data-id="{{ $item->id }}" 
-                                                                    data-kegiatan="{{ $item->kegiatan_id }}" 
-                                                                    data-posisi="{{ $item->posisi_id }}" 
-                                                                    data-takmir="{{ $item->takmir_id }}" 
-                                                                    data-jobdesk="{{ e($item->jobdesk) }}">
-                                                                    <i class="bi bi-pencil me-2 text-warning"></i> Edit Panitia
-                                                                </button>
-                                                            </li>
-                                                            <li>
-                                                                <form action="{{ route('kepanitiaan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus panitia ini?')">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Hapus</button>
-                                                                </form>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
+                                                    <span class="badge bg-secondary-subtle text-secondary small">{{ $members->count() }} Anggota</span>
                                                 </div>
-
-                                                <div class="d-flex align-items-center gap-3 my-2">
-                                                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 46px; height: 46px;">
-                                                        {{ strtoupper(substr($item->takmir?->nama_takmir ?? 'P', 0, 1)) }}
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="fw-bold text-dark mb-0">{{ $item->takmir?->nama_takmir ?? 'Petugas Takmir' }}</h6>
-                                                        <small class="text-muted">{{ $item->takmir?->telepon ?? 'Takmir Masjid' }}</small>
-                                                    </div>
-                                                </div>
-
-                                                <div class="bg-light p-2 rounded-2 mt-2">
-                                                    <small class="text-muted d-block fw-semibold" style="font-size: 0.72rem;">Uraian Tugas / Jobdesk:</small>
-                                                    <span class="small text-dark">{{ $item->jobdesk }}</span>
+                                                <div class="card-body p-3">
+                                                    <ul class="list-group list-group-flush">
+                                                        @foreach($members as $m)
+                                                            <li class="list-group-item px-0 py-2.5 border-bottom d-flex justify-content-between align-items-start">
+                                                                <div class="d-flex gap-2">
+                                                                    <div class="rounded-circle bg-light border text-secondary d-flex align-items-center justify-content-center fw-bold small mt-0.5" style="width: 28px; height: 28px;">
+                                                                        {{ strtoupper(substr($m->takmir?->nama_takmir ?? 'P', 0, 1)) }}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div class="fw-semibold text-dark small">{{ $m->takmir?->nama_takmir ?? 'Petugas Takmir' }}</div>
+                                                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                                                            <i class="bi bi-check2-circle text-success me-1"></i>{{ $m->jobdesk }}
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="d-flex gap-1 ms-2">
+                                                                    <button type="button" class="btn btn-light btn-xs p-1 text-warning btn-edit" 
+                                                                        data-id="{{ $m->id }}" 
+                                                                        data-kegiatan="{{ $m->kegiatan_id }}" 
+                                                                        data-posisi="{{ $m->posisi_id }}" 
+                                                                        data-takmir="{{ $m->takmir_id }}" 
+                                                                        data-jobdesk="{{ e($m->jobdesk) }}"
+                                                                        title="Edit">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <form action="{{ route('kepanitiaan.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Hapus anggota?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="btn btn-light btn-xs p-1 text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                                                    </form>
+                                                                </div>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endif
-
-                    <!-- B. DIVISI / SEKSI OPERASIONAL (OPERATIONAL SECTIONS) -->
-                    @if($seksiSeksi->isNotEmpty())
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <span class="badge bg-primary px-2 py-1"><i class="bi bi-grid-fill me-1"></i> TIER 2</span>
-                                <h5 class="fw-bold text-dark mb-0">Divisi / Seksi-Seksi Operasional Lapangan</h5>
-                            </div>
-
-                            <div class="row g-3">
-                                @foreach($seksiSeksi as $posisiId => $members)
-                                    @php $posisiFirst = $members->first()->posisi; @endphp
-                                    <div class="col-md-6 col-lg-4">
-                                        <div class="card h-100 border-0 shadow-sm">
-                                            <div class="card-header bg-light border-0 py-2.5 d-flex justify-content-between align-items-center">
-                                                <span class="fw-bold text-dark small text-uppercase">
-                                                    <i class="bi bi-tag-fill me-1 text-primary"></i> {{ $posisiFirst?->nama_posisi ?? 'Seksi Operasional' }}
-                                                </span>
-                                                <span class="badge bg-secondary-subtle text-secondary small">{{ $members->count() }} Anggota</span>
-                                            </div>
-                                            <div class="card-body p-3">
-                                                <ul class="list-group list-group-flush">
-                                                    @foreach($members as $m)
-                                                        <li class="list-group-item px-0 py-2.5 border-bottom d-flex justify-content-between align-items-start">
-                                                            <div class="d-flex gap-2">
-                                                                <div class="rounded-circle bg-light border text-secondary d-flex align-items-center justify-content-center fw-bold small mt-0.5" style="width: 28px; height: 28px;">
-                                                                    {{ strtoupper(substr($m->takmir?->nama_takmir ?? 'P', 0, 1)) }}
-                                                                </div>
-                                                                <div>
-                                                                    <div class="fw-semibold text-dark small">{{ $m->takmir?->nama_takmir ?? 'Petugas Takmir' }}</div>
-                                                                    <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                                                        <i class="bi bi-check2-circle text-success me-1"></i>{{ $m->jobdesk }}
-                                                                    </small>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex gap-1 ms-2">
-                                                                <button type="button" class="btn btn-light btn-xs p-1 text-warning btn-edit" 
-                                                                    data-id="{{ $m->id }}" 
-                                                                    data-kegiatan="{{ $m->kegiatan_id }}" 
-                                                                    data-posisi="{{ $m->posisi_id }}" 
-                                                                    data-takmir="{{ $m->takmir_id }}" 
-                                                                    data-jobdesk="{{ e($m->jobdesk) }}"
-                                                                    title="Edit">
-                                                                    <i class="bi bi-pencil"></i>
-                                                                </button>
-                                                                <form action="{{ route('kepanitiaan.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Hapus anggota?')">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="btn btn-light btn-xs p-1 text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                                                                </form>
-                                                            </div>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                 @endif
 
@@ -565,6 +944,26 @@
             });
         }
     });
+
+    // Toggle between Hierarchical Tree Organigram & Grid View
+    function switchOrganigramView(mode) {
+        var treeWrapper = document.getElementById('wrapper-tree-view');
+        var gridWrapper = document.getElementById('wrapper-grid-view');
+        var btnTree = document.getElementById('btnViewTree');
+        var btnGrid = document.getElementById('btnViewGrid');
+
+        if (mode === 'tree') {
+            treeWrapper.style.display = 'block';
+            gridWrapper.style.display = 'none';
+            btnTree.classList.add('active');
+            btnGrid.classList.remove('active');
+        } else {
+            treeWrapper.style.display = 'none';
+            gridWrapper.style.display = 'block';
+            btnTree.classList.remove('active');
+            btnGrid.classList.add('active');
+        }
+    }
 </script>
 
 @if($selectedKegiatan)
