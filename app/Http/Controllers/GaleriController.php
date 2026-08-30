@@ -39,22 +39,41 @@ class GaleriController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('tanggal', function ($row) {
-                    return $row->tanggal ? Carbon::parse($row->tanggal)->format('d-m-Y') : '-';
+                    if (!$row->tanggal) return '-';
+                    $carbon = Carbon::parse($row->tanggal);
+                    return '<div class="text-center"><span class="fw-semibold text-dark">' . $carbon->translatedFormat('d M Y') . '</span><small class="text-muted d-block">' . $carbon->diffForHumans() . '</small></div>';
                 })
                 ->addColumn('preview_gambar', function ($row) {
                     if ($row->gambar && file_exists(public_path('storage/' . $row->gambar))) {
-                        return '<img src="' . asset('storage/' . $row->gambar) . '" alt="' . e($row->nama_foto) . '" class="img-thumbnail" style="max-height: 55px; border-radius: 6px;">';
+                        $url = asset('storage/' . $row->gambar);
+                        return '
+                            <div class="text-center">
+                                <a href="' . $url . '" target="_blank" title="Klik untuk memperbesar">
+                                    <img src="' . $url . '" alt="' . e($row->nama_foto) . '" class="img-thumbnail rounded-3 shadow-sm" style="width: 70px; height: 50px; object-fit: cover;">
+                                </a>
+                            </div>
+                        ';
                     }
-                    return '<span class="badge bg-secondary">Tidak ada foto</span>';
+                    return '<div class="text-center"><span class="badge bg-secondary-subtle text-secondary border">No Image</span></div>';
                 })
                 ->editColumn('nama_foto', function ($row) {
-                    return '<strong>' . e($row->nama_foto) . '</strong>';
+                    return '<div><span class="fw-bold text-dark fs-6">' . e($row->nama_foto) . '</span></div>';
                 })
                 ->addColumn('kegiatan_name', function ($row) {
-                    return $row->kegiatan ? e($row->kegiatan->nama_kegiatan) : '-';
+                    if (!$row->kegiatan) return '<span class="text-muted small">Umum / Tidak Terikat</span>';
+                    return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-semibold"><i class="bi bi-calendar-event me-1"></i>' . e($row->kegiatan->nama_kegiatan) . '</span>';
                 })
                 ->addColumn('takmir_name', function ($row) {
-                    return $row->takmir ? e($row->takmir->nama_takmir) : '-';
+                    if (!$row->takmir) return '<span class="text-muted">-</span>';
+                    $initial = strtoupper(substr($row->takmir->nama_takmir, 0, 1));
+                    return '
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold" style="width: 30px; height: 30px; font-size: 0.8rem; flex-shrink: 0;">
+                                ' . $initial . '
+                            </div>
+                            <span class="fw-semibold text-dark small">' . e($row->takmir->nama_takmir) . '</span>
+                        </div>
+                    ';
                 })
                 ->addColumn('action', function ($row) {
                     $editUrl = route('galeri.edit', $row->id);
@@ -64,28 +83,30 @@ class GaleriController extends Controller
 
                     return '
                         <div class="d-flex justify-content-center gap-1">
-                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm" title="Edit"><i class="bi bi-pencil"></i> Edit</a>
-                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus foto ini?\')">
+                            <a href="' . $editUrl . '" class="btn btn-warning btn-sm shadow-sm" title="Edit Foto"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+                            <form action="' . $deleteUrl . '" method="POST" class="d-inline" onsubmit="return confirm(\'Apakah Anda yakin ingin menghapus foto dokumentasi ini?\')">
                                 ' . $csrf . '
                                 ' . $deleteMethod . '
-                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i> Hapus</button>
+                                <button type="submit" class="btn btn-danger btn-sm shadow-sm" title="Hapus Foto"><i class="bi bi-trash me-1"></i> Hapus</button>
                             </form>
                         </div>
                     ';
                 })
-                ->rawColumns(['preview_gambar', 'nama_foto', 'action'])
+                ->rawColumns(['preview_gambar', 'nama_foto', 'tanggal', 'kegiatan_name', 'takmir_name', 'action'])
                 ->make(true);
         }
 
         $kegiatans = Kegiatan::all();
         $totalGaleri = Galeri::count();
+        $bulanIni = Galeri::whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year)->count();
+        $totalKegiatanDoc = Galeri::distinct('kegiatan_id')->whereNotNull('kegiatan_id')->count('kegiatan_id');
 
-        return view('galeri.index', compact('kegiatans', 'totalGaleri'));
+        return view('galeri.index', compact('kegiatans', 'totalGaleri', 'bulanIni', 'totalKegiatanDoc'));
     }
 
     public function create()
     {
-        $kegiatans = Kegiatan::all();
+        $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
         $takmirs = Takmir::all();
         return view('galeri.create', compact('kegiatans', 'takmirs'));
     }
@@ -93,28 +114,39 @@ class GaleriController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'nama_foto' => 'required|max:100',
-            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'tanggal'     => 'required|date',
+            'nama_foto'   => 'required|string|max:100',
+            'gambar'      => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
             'kegiatan_id' => 'required|exists:kegiatan,id',
+        ], [
+            'tanggal.required'     => 'Tanggal dokumentasi foto wajib diisi.',
+            'nama_foto.required'   => 'Judul atau nama foto dokumentasi wajib diisi.',
+            'gambar.required'      => 'File foto dokumentasi wajib dipilih dan diunggah.',
+            'gambar.image'         => 'File yang diunggah harus berupa gambar (JPG, PNG, WEBP).',
+            'gambar.max'           => 'Ukuran foto maksimal adalah 3 MB.',
+            'kegiatan_id.required' => 'Silakan pilih agenda kegiatan terkait.',
         ]);
 
         $filePath = null;
         if ($request->hasFile('gambar')) {
+            $destinationPath = public_path('storage/galeri_masjid');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
             $fileName = time() . '_' . $request->file('gambar')->getClientOriginalName();
             $filePath = 'galeri_masjid/' . $fileName;
-            $request->file('gambar')->move(public_path('storage/galeri_masjid'), $fileName);
+            $request->file('gambar')->move($destinationPath, $fileName);
         }
 
         Galeri::create([
-            'tanggal' => $request->tanggal,
-            'nama_foto' => $request->nama_foto,
-            'gambar' => $filePath,
+            'tanggal'     => $request->tanggal,
+            'nama_foto'   => $request->nama_foto,
+            'gambar'      => $filePath,
             'kegiatan_id' => $request->kegiatan_id,
-            'takmir_id' => auth()->id(),
+            'takmir_id'   => auth()->id(),
         ]);
 
-        return redirect()->route('galeri.index')->with('success', 'Foto berhasil ditambahkan.');
+        return redirect()->route('galeri.index')->with('success', 'Foto dokumentasi berhasil disimpan dan dipublikasikan.');
     }
 
     public function show($id)
@@ -126,7 +158,7 @@ class GaleriController extends Controller
     public function edit($id)
     {
         $galeri = Galeri::findOrFail($id);
-        $kegiatans = Kegiatan::all();
+        $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
 
         return view('galeri.edit', compact('galeri', 'kegiatans'));
     }
@@ -134,10 +166,16 @@ class GaleriController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'nama_foto' => 'required|max:100',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'tanggal'     => 'required|date',
+            'nama_foto'   => 'required|string|max:100',
+            'gambar'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
             'kegiatan_id' => 'required|exists:kegiatan,id',
+        ], [
+            'tanggal.required'     => 'Tanggal dokumentasi foto wajib diisi.',
+            'nama_foto.required'   => 'Judul atau nama foto dokumentasi wajib diisi.',
+            'gambar.image'         => 'File yang diunggah harus berupa gambar (JPG, PNG, WEBP).',
+            'gambar.max'           => 'Ukuran foto maksimal adalah 3 MB.',
+            'kegiatan_id.required' => 'Silakan pilih agenda kegiatan terkait.',
         ]);
 
         $galeri = Galeri::findOrFail($id);
@@ -148,20 +186,24 @@ class GaleriController extends Controller
                 @unlink(public_path('storage/' . $galeri->gambar));
             }
 
+            $destinationPath = public_path('storage/galeri_masjid');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
             $fileName = time() . '_' . $request->file('gambar')->getClientOriginalName();
             $filePath = 'galeri_masjid/' . $fileName;
-            $request->file('gambar')->move(public_path('storage/galeri_masjid'), $fileName);
+            $request->file('gambar')->move($destinationPath, $fileName);
         }
 
         $galeri->update([
-            'tanggal' => $request->tanggal,
-            'nama_foto' => $request->nama_foto,
-            'gambar' => $filePath,
+            'tanggal'     => $request->tanggal,
+            'nama_foto'   => $request->nama_foto,
+            'gambar'      => $filePath,
             'kegiatan_id' => $request->kegiatan_id,
-            'takmir_id' => auth()->id(),
+            'takmir_id'   => auth()->id(),
         ]);
 
-        return redirect()->route('galeri.index')->with('success', 'Data foto berhasil diperbarui.');
+        return redirect()->route('galeri.index')->with('success', 'Foto dokumentasi berhasil diperbarui.');
     }
 
     public function destroy($id)
@@ -174,6 +216,7 @@ class GaleriController extends Controller
 
         $galeri->delete();
 
-        return redirect()->route('galeri.index')->with('success', 'Foto berhasil dihapus.');
+        return redirect()->route('galeri.index')->with('success', 'Foto dokumentasi berhasil dihapus.');
     }
 }
+

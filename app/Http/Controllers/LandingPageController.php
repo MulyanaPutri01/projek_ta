@@ -24,21 +24,54 @@ class LandingPageController extends Controller
         $totalPengeluaran = Keuangan::where('kategori_id', 2)->sum('nominal');
         $totalSaldo = $totalPemasukan - $totalPengeluaran;
 
+        $pemasukanBulanIni = Keuangan::where('kategori_id', 1)
+            ->whereMonth('tanggal', now()->month)
+            ->whereYear('tanggal', now()->year)
+            ->sum('nominal');
+
+        $pengeluaranBulanIni = Keuangan::where('kategori_id', 2)
+            ->whereMonth('tanggal', now()->month)
+            ->whereYear('tanggal', now()->year)
+            ->sum('nominal');
+
+        $currentYear = Carbon::now()->year;
+        $chartMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $chartPemasukan = [];
+        $chartPengeluaran = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $chartPemasukan[] = (float) Keuangan::where('kategori_id', 1)
+                ->whereYear('tanggal', $currentYear)
+                ->whereMonth('tanggal', $m)
+                ->sum('nominal');
+
+            $chartPengeluaran[] = (float) Keuangan::where('kategori_id', 2)
+                ->whereYear('tanggal', $currentYear)
+                ->whereMonth('tanggal', $m)
+                ->sum('nominal');
+        }
+
         $keuangan = Keuangan::with(['kategori', 'donatur', 'kegiatan'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
-            ->take(5)
-            ->get();
-
-        // 3. Agenda Kegiatan (Prioritaskan agenda mendatang)
-        $kegiatans = Kegiatan::orderBy('tanggal', 'asc')
-            ->where('tanggal', '>=', now()->toDateString())
             ->take(6)
             ->get();
 
+        // 3. Agenda Kegiatan (Prioritaskan agenda mendatang)
+        $kegiatans = Kegiatan::with(['kepanitiaans.takmir', 'kepanitiaans.posisi'])
+            ->orderBy('tanggal', 'asc')
+            ->where('tanggal', '>=', now()->toDateString())
+            ->take(9)
+            ->get();
+
         if ($kegiatans->isEmpty()) {
-            $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->take(6)->get();
+            $kegiatans = Kegiatan::with(['kepanitiaans.takmir', 'kepanitiaans.posisi'])
+                ->orderBy('tanggal', 'desc')
+                ->take(9)
+                ->get();
         }
+
+        $featuredKegiatan = $kegiatans->first();
 
         // 4. Galeri Foto Dokumentasi
         $galeri = Galeri::with(['kegiatan', 'takmir'])
@@ -67,10 +100,17 @@ class LandingPageController extends Controller
             'keuangan',
             'galeri',
             'kegiatans',
+            'featuredKegiatan',
             'pengurusList',
             'totalPemasukan',
             'totalPengeluaran',
             'totalSaldo',
+            'pemasukanBulanIni',
+            'pengeluaranBulanIni',
+            'chartMonths',
+            'chartPemasukan',
+            'chartPengeluaran',
+            'currentYear',
             'totalKegiatan',
             'totalInventaris',
             'totalDonatur',

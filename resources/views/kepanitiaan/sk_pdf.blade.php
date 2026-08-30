@@ -5,37 +5,51 @@
     <title>SK Panitia - {{ $kegiatan->nama_kegiatan }}</title>
     <style>
         @page {
-            margin: 15mm 20mm 20mm 20mm;
-            size: a4 portrait;
+            @if(($orientation ?? 'portrait') === 'landscape')
+                margin-top: 35pt;
+                margin-bottom: 35pt;
+                margin-left: 45pt;
+                margin-right: 45pt;
+            @else
+                margin-top: 40pt;
+                margin-bottom: 40pt;
+                margin-left: 50pt;
+                margin-right: 50pt;
+            @endif
         }
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
         body {
             font-family: 'DejaVu Sans', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 9pt;
+            font-size: {{ ($orientation ?? 'portrait') === 'landscape' ? '8pt' : '8.5pt' }};
             color: #1e293b;
             line-height: 1.45;
             background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .print-wrapper {
+            width: 100%;
         }
 
         /* ===== KOP SURAT RESMI ===== */
         .kop-surat {
             text-align: center;
-            border-bottom: 3px double #065f46;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
+            border-bottom: 2.5pt double #065f46;
+            padding-bottom: 8pt;
+            margin-bottom: 14pt;
         }
         .bismillah {
-            font-size: 12pt;
+            font-size: 9pt;
             color: #065f46;
-            font-weight: bold;
-            margin-bottom: 2px;
+            font-weight: 700;
+            margin-bottom: 2pt;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         .nama-masjid {
-            font-size: 14pt;
+            font-size: 13pt;
             font-weight: 800;
             color: #065f46;
             text-transform: uppercase;
@@ -54,47 +68,47 @@
         /* ===== JUDUL SK ===== */
         .judul-sk-container {
             text-align: center;
-            margin-bottom: 14px;
+            margin-bottom: 12pt;
         }
         .judul-sk {
-            font-size: 11pt;
+            font-size: 10.5pt;
             font-weight: 800;
             text-transform: uppercase;
             text-decoration: underline;
             color: #0f172a;
         }
         .nomor-sk {
-            font-size: 8.5pt;
+            font-size: 8pt;
             font-weight: 600;
             color: #334155;
-            margin-top: 2px;
+            margin-top: 2pt;
         }
         .tentang-sk {
-            font-size: 9.5pt;
+            font-size: 9pt;
             font-weight: 700;
             color: #065f46;
             text-transform: uppercase;
-            margin-top: 4px;
+            margin-top: 3pt;
         }
 
         /* ===== KONSIDERANS ===== */
         .konsiderans-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 8.5pt;
+            margin-bottom: 10pt;
+            font-size: 8pt;
         }
         .konsiderans-table td {
             vertical-align: top;
-            padding: 2px 0;
+            padding: 2pt 0;
         }
         .label-col {
-            width: 100px;
+            width: 90pt;
             font-weight: bold;
             color: #334155;
         }
         .colon-col {
-            width: 15px;
+            width: 12pt;
             font-weight: bold;
         }
 
@@ -102,8 +116,8 @@
         .memutuskan-box {
             text-align: center;
             font-weight: 800;
-            font-size: 10pt;
-            margin: 10px 0 6px 0;
+            font-size: 9.5pt;
+            margin: 8pt 0 6pt 0;
             color: #065f46;
             letter-spacing: 1px;
         }
@@ -112,21 +126,21 @@
         .table-panitia {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0 16px 0;
+            margin: 10pt 0 14pt 0;
         }
         .table-panitia thead th {
             background: #065f46;
             color: #ffffff;
-            font-size: 8pt;
+            font-size: 7.5pt;
             font-weight: 700;
-            padding: 6px 8px;
+            padding: 5pt 6pt;
             border: 1px solid #044e3a;
             text-align: center;
         }
         .table-panitia tbody td {
-            padding: 5px 8px;
+            padding: 4.5pt 6pt;
             border: 1px solid #cbd5e1;
-            font-size: 8pt;
+            font-size: 7.5pt;
             vertical-align: middle;
         }
         .table-panitia tbody tr:nth-child(even) {
@@ -136,15 +150,15 @@
             background: #e2e8f0 !important;
             font-weight: bold;
             color: #0f172a;
-            font-size: 8pt;
-            padding: 4px 8px;
+            font-size: 7.5pt;
+            padding: 4pt 6pt;
             border: 1px solid #94a3b8;
         }
         .badge-posisi {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 7.5pt;
+            padding: 1.5pt 5pt;
+            border-radius: 2pt;
+            font-size: 7pt;
             font-weight: 700;
             background: #e0f2fe;
             color: #0369a1;
@@ -153,7 +167,7 @@
         /* ===== TANDA TANGAN ===== */
         .ttd-box {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 18pt;
             page-break-inside: avoid;
         }
         .ttd-table {
@@ -163,10 +177,10 @@
         .ttd-table td {
             vertical-align: top;
             text-align: center;
-            font-size: 8.5pt;
+            font-size: 8pt;
         }
         .ttd-space {
-            height: 55px;
+            height: 50pt;
         }
         .ttd-name {
             font-weight: 700;
@@ -176,10 +190,10 @@
 
         /* ===== FOOTER ===== */
         .doc-footer {
-            margin-top: 20px;
-            padding-top: 6px;
+            margin-top: 18pt;
+            padding-top: 6pt;
             border-top: 1px dashed #cbd5e1;
-            font-size: 7pt;
+            font-size: 6.8pt;
             color: #94a3b8;
             text-align: center;
         }
@@ -187,10 +201,11 @@
     </style>
 </head>
 <body>
+<div class="print-wrapper">
 
     <!-- Kop Surat Resmi -->
     <div class="kop-surat">
-        <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+        <div class="bismillah">BISMILLAHIRRAHMANIRRAHIM</div>
         <div class="nama-masjid">PENGURUS TAKMIR {{ $profil->nama_masjid ?? 'MASJID AL-IKHLAS' }}</div>
         <div class="alamat-masjid">{{ $profil->alamat ?? 'Dukuh Semendot, Desa Karangmulya, Kec. Suradadi, Kab. Tegal' }}</div>
         <div class="kontak-masjid">Telepon / WhatsApp: {{ $profil->telepon ?? '0812-3456-7890' }} | Sistem Informasi Manajemen Masjid</div>
@@ -329,5 +344,6 @@
         Dokumen Surat Keputusan Resmi ini diterbitkan melalui Sistem Informasi Manajemen Masjid (SIMAS).
     </div>
 
+</div>
 </body>
 </html>

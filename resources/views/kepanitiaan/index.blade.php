@@ -18,9 +18,9 @@
                 <i class="bi bi-person-plus me-1"></i> Tambah Panitia
             </button>
             @if($selectedKegiatan)
-                <a href="{{ route('kepanitiaan.sk-pdf', $selectedKegiatan->id) }}" class="btn btn-outline-danger shadow-sm" title="Download Surat Keputusan Panitia Resmi">
+                <button type="button" class="btn btn-outline-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSkPdfOptions" title="Download Surat Keputusan Panitia Resmi">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Cetak SK Panitia (PDF)
-                </a>
+                </button>
             @endif
             <a href="{{ route('posisi.index') }}" class="btn btn-outline-secondary shadow-sm">
                 <i class="bi bi-person-badge me-1"></i> Master Posisi
@@ -531,5 +531,136 @@
                 document.getElementById('create_jobdesk').value = this.getAttribute('data-text');
             });
         });
+
+        // SK PDF Paper selection styling
+        document.querySelectorAll('.sk-paper-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.sk-paper-card').forEach(c => c.classList.remove('selected-paper'));
+                this.closest('label').querySelector('.sk-paper-card').classList.add('selected-paper');
+            });
+        });
+
+        // SK PDF Orientation selection styling
+        document.querySelectorAll('.sk-orientation-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.sk-orientation-card').forEach(c => c.classList.remove('selected-orientation'));
+                this.closest('label').querySelector('.sk-orientation-card').classList.add('selected-orientation');
+            });
+        });
+
+        // Generate SK PDF Click
+        var btnSkPdf = document.getElementById('btn_generate_sk_pdf');
+        if (btnSkPdf) {
+            btnSkPdf.addEventListener('click', function() {
+                var paper = document.querySelector('.sk-paper-radio:checked').value;
+                var orientation = document.querySelector('.sk-orientation-radio:checked').value;
+                var kegiatanId = this.getAttribute('data-kegiatan-id');
+
+                var url = "{{ route('kepanitiaan.sk-pdf', ':id') }}".replace(':id', kegiatanId) + '?paper=' + paper + '&orientation=' + orientation;
+                window.open(url, '_blank');
+
+                var modalEl = document.getElementById('modalSkPdfOptions');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            });
+        }
     });
 </script>
+
+@if($selectedKegiatan)
+<!-- Modal Opsi Cetak SK Panitia PDF -->
+<div class="modal fade" id="modalSkPdfOptions" tabindex="-1" aria-labelledby="modalSkPdfOptionsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-danger text-white py-3">
+                <h6 class="modal-title fw-bold" id="modalSkPdfOptionsLabel">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Opsi Cetak SK Panitia (PDF)
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- 1. Pilihan Ukuran Kertas -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark mb-2">1. Pilih Ukuran Kertas:</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="sk_pdf_paper" value="a4" class="d-none sk-paper-radio" checked>
+                                <div class="card border p-3 text-center transition-all sk-paper-card selected-paper">
+                                    <div class="fw-bold text-dark fs-6 mb-1">A4</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">210 x 297 mm</small>
+                                    <span class="badge bg-primary-subtle text-primary mt-1" style="font-size: 0.68rem;">Standar Internasional</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="sk_pdf_paper" value="f4" class="d-none sk-paper-radio">
+                                <div class="card border p-3 text-center transition-all sk-paper-card">
+                                    <div class="fw-bold text-dark fs-6 mb-1">F4 / Folio</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">215 x 330 mm</small>
+                                    <span class="badge bg-success-subtle text-success mt-1" style="font-size: 0.68rem;">Standar Dokumen Resmi</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Pilihan Orientasi Kertas -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark mb-2">2. Pilih Orientasi Halaman:</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="sk_pdf_orientation" value="portrait" class="d-none sk-orientation-radio" checked>
+                                <div class="card border p-3 text-center transition-all sk-orientation-card selected-orientation">
+                                    <i class="bi bi-file-earmark-text text-primary fs-3 mb-1"></i>
+                                    <div class="fw-bold text-dark small">Portrait</div>
+                                    <small class="text-success fw-semibold d-block" style="font-size: 0.68rem;">★ Standar Surat SK</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="sk_pdf_orientation" value="landscape" class="d-none sk-orientation-radio">
+                                <div class="card border p-3 text-center transition-all sk-orientation-card">
+                                    <i class="bi bi-aspect-ratio text-secondary fs-3 mb-1"></i>
+                                    <div class="fw-bold text-dark small">Landscape</div>
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">Mendatar Horizontal</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border small text-muted mb-0 py-2">
+                    <i class="bi bi-info-circle text-primary me-1"></i> SK Panitia diterbitkan resmi dengan Kop Surat Takmir Masjid dan lembar tanda tangan pengesahan.
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light border-top d-flex justify-content-between p-3">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="btn_generate_sk_pdf" data-kegiatan-id="{{ $selectedKegiatan->id }}" class="btn btn-danger btn-sm shadow-sm fw-semibold">
+                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Buka & Unduh SK Panitia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .sk-paper-card:hover, .sk-orientation-card:hover {
+        border-color: #065f46 !important;
+        transform: translateY(-2px);
+    }
+    .selected-paper, .selected-orientation {
+        border-color: #065f46 !important;
+        border-width: 2px !important;
+        background-color: #f0fdf4 !important;
+    }
+</style>
+

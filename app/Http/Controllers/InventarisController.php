@@ -162,14 +162,53 @@ class InventarisController extends Controller
         return redirect()->route('inventaris.index')->with('success', 'Barang inventaris berhasil dihapus.');
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $inventariss = Inventaris::with(['catatans.kondisi'])->get();
-        $totalInventaris = $inventariss->count();
+        $query = Inventaris::with(['catatans.kondisi']);
 
-        $pdf = Pdf::loadView('inventaris.pdf', compact('inventariss', 'totalInventaris'));
+        if ($request->filled('lokasi')) {
+            $query->where('lokasi', 'like', '%' . $request->lokasi . '%');
+        }
 
-        return $pdf->stream('inventaris.pdf');
+        if ($request->filled('tahun')) {
+            $query->where('tahun_pembelian', $request->tahun);
+        }
+
+        $inventariss = $query->get();
+        $totalJenis = $inventariss->count();
+        $totalUnit = $inventariss->sum('jumlah');
+
+        $profil = \App\Models\ProfilMasjid::first();
+        $ketuaTakmir = \App\Models\Takmir::whereHas('role', function($q) {
+            $q->where('nama_role', 'like', '%ketua%')->orWhere('nama_role', 'like', '%admin%');
+        })->first() ?? \App\Models\Takmir::first();
+
+        $sekretaris = \App\Models\Takmir::whereHas('role', function($q) {
+            $q->where('nama_role', 'like', '%sekretaris%');
+        })->first() ?? \App\Models\Takmir::skip(1)->first() ?? $ketuaTakmir;
+
+        $paper = strtolower($request->get('paper', 'a4'));
+        $orientation = strtolower($request->get('orientation', 'landscape'));
+
+        if (!in_array($orientation, ['portrait', 'landscape'])) {
+            $orientation = 'landscape';
+        }
+
+        $pdf = Pdf::loadView('inventaris.pdf', compact(
+            'inventariss', 'totalJenis', 'totalUnit', 'profil', 'ketuaTakmir', 'sekretaris',
+            'paper', 'orientation'
+        ));
+
+        if ($paper === 'f4' || $paper === 'folio') {
+            // Standar F4 / Folio Indonesia: 215mm x 330mm = 609.45pt x 935.43pt
+            $pdf->setPaper([0, 0, 609.45, 935.43], $orientation);
+        } else {
+            $pdf->setPaper('a4', $orientation);
+        }
+
+        $namaFile = 'Laporan_Inventaris_' . ($profil->nama_masjid ? str_replace(' ', '_', $profil->nama_masjid) : 'Masjid') . '_' . $paper . '_' . $orientation . '_' . date('Ymd_His') . '.pdf';
+
+        return $pdf->stream($namaFile);
     }
 }
 

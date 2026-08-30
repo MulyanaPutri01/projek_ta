@@ -17,9 +17,9 @@
             <a href="{{ route('inventaris.create') }}" class="btn btn-success shadow-sm">
                 <i class="bi bi-plus-circle-fill me-1"></i> Tambah Barang
             </a>
-            <a href="{{ route('inventaris.pdf') }}" class="btn btn-danger shadow-sm" target="_blank">
-                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Unduh Laporan PDF
-            </a>
+            <button type="button" class="btn btn-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalInventarisPdfOptions">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Unduh / Cetak PDF
+            </button>
         </div>
     </div><!-- End Page Title -->
 
@@ -140,62 +140,192 @@
 
 @include('layouts.footer')
 
+<!-- Modal Opsi Cetak PDF Inventaris -->
+<div class="modal fade" id="modalInventarisPdfOptions" tabindex="-1" aria-labelledby="modalInventarisPdfOptionsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-danger text-white py-3">
+                <h6 class="modal-title fw-bold" id="modalInventarisPdfOptionsLabel">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Opsi Cetak & Unduh PDF Inventaris
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- 1. Pilihan Ukuran Kertas -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark mb-2">1. Pilih Ukuran Kertas:</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="inv_pdf_paper" value="a4" class="d-none inv-paper-radio" checked>
+                                <div class="card border p-3 text-center transition-all inv-paper-card selected-paper">
+                                    <div class="fw-bold text-dark fs-6 mb-1">A4</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">210 x 297 mm</small>
+                                    <span class="badge bg-primary-subtle text-primary mt-1" style="font-size: 0.68rem;">Standar Internasional</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="inv_pdf_paper" value="f4" class="d-none inv-paper-radio">
+                                <div class="card border p-3 text-center transition-all inv-paper-card">
+                                    <div class="fw-bold text-dark fs-6 mb-1">F4 / Folio</div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">215 x 330 mm</small>
+                                    <span class="badge bg-success-subtle text-success mt-1" style="font-size: 0.68rem;">Standar Indonesia</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Pilihan Orientasi Kertas -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark mb-2">2. Pilih Orientasi Halaman:</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="inv_pdf_orientation" value="landscape" class="d-none inv-orientation-radio" checked>
+                                <div class="card border p-3 text-center transition-all inv-orientation-card selected-orientation">
+                                    <i class="bi bi-aspect-ratio text-primary fs-3 mb-1"></i>
+                                    <div class="fw-bold text-dark small">Landscape</div>
+                                    <small class="text-success fw-semibold d-block" style="font-size: 0.68rem;">★ Pas Untuk Tabel</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <label class="d-block cursor-pointer">
+                                <input type="radio" name="inv_pdf_orientation" value="portrait" class="d-none inv-orientation-radio">
+                                <div class="card border p-3 text-center transition-all inv-orientation-card">
+                                    <i class="bi bi-file-earmark text-secondary fs-3 mb-1"></i>
+                                    <div class="fw-bold text-dark small">Portrait</div>
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">Tegak Vertikal</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border small text-muted mb-0 py-2">
+                    <i class="bi bi-info-circle text-primary me-1"></i> Dokumen PDF mencakup seluruh data aset fisik inventaris masjid dan disesuaikan agar tidak terpotong.
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light border-top d-flex justify-content-between p-3">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="btn_generate_inv_pdf" class="btn btn-danger btn-sm shadow-sm fw-semibold">
+                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Buka & Unduh PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .inv-paper-card:hover, .inv-orientation-card:hover {
+        border-color: #065f46 !important;
+        transform: translateY(-2px);
+    }
+    .selected-paper, .selected-orientation {
+        border-color: #065f46 !important;
+        border-width: 2px !important;
+        background-color: #f0fdf4 !important;
+    }
+</style>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (typeof jQuery !== 'undefined' && $.fn.DataTable) {
-            initInventarisTable();
-        } else {
-            window.addEventListener('load', initInventarisTable);
-        }
-
-        function initInventarisTable() {
-            var table = $('#inventarisTable').DataTable({
-                processing: true,
-                serverSide: true,
-                responsive: true,
-                ajax: {
-                    url: "{{ route('inventaris.index') }}",
-                    data: function (d) {
-                        d.lokasi = $('#filter_lokasi').val();
-                        d.tahun = $('#filter_tahun').val();
-                    }
-                },
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
-                    { data: 'nama_barang', name: 'nama_barang' },
-                    { data: 'jumlah', name: 'jumlah', className: 'text-center' },
-                    { data: 'tahun_pembelian', name: 'tahun_pembelian', className: 'text-center' },
-                    { data: 'lokasi', name: 'lokasi' },
-                    { data: 'kondisi_terakhir', name: 'kondisi_terakhir', orderable: false, searchable: false, className: 'text-center' },
-                    { data: 'keterangan', name: 'keterangan' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
-                ],
-                order: [[1, 'asc']],
-                language: {
-                    processing: "<div class='spinner-border text-primary spinner-border-sm me-2'></div> Memuat data inventaris...",
-                    search: "Cari Barang:",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ barang",
-                    infoEmpty: "Tidak ada data barang",
-                    emptyTable: "Belum ada aset barang inventaris yang terdaftar",
-                    paginate: {
-                        first: "«",
-                        previous: "‹",
-                        next: "›",
-                        last: "»"
-                    }
-                }
-            });
-
-            $('#filter_lokasi, #filter_tahun').on('change', function() {
-                table.draw();
-            });
-
-            $('#btn_reset').on('click', function() {
-                $('#filter_lokasi').val('');
-                $('#filter_tahun').val('');
-                table.draw();
-            });
+$(document).ready(function() {
+    var table = $('#inventarisTable').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        ajax: {
+            url: "{{ route('inventaris.index') }}",
+            data: function (d) {
+                d.lokasi = $('#filter_lokasi').val();
+                d.tahun = $('#filter_tahun').val();
+            }
+        },
+        columns: [
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+            { data: 'nama_barang', name: 'nama_barang' },
+            { data: 'jumlah', name: 'jumlah', className: 'text-center' },
+            { data: 'tahun_pembelian', name: 'tahun_pembelian', className: 'text-center' },
+            { data: 'lokasi', name: 'lokasi' },
+            { data: 'kondisi_terakhir', name: 'kondisi_terakhir', orderable: false, searchable: false, className: 'text-center' },
+            { data: 'keterangan', name: 'keterangan' },
+            { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+        ],
+        order: [[1, 'asc']],
+        language: {
+            processing: "<div class='spinner-border text-primary spinner-border-sm me-2'></div> Memuat data inventaris...",
+            search: "Cari Barang:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ barang",
+            infoEmpty: "Tidak ada data barang",
+            emptyTable: "Belum ada aset barang inventaris yang terdaftar",
+            paginate: {
+                first: "«",
+                previous: "‹",
+                next: "›",
+                last: "»"
+            }
         }
     });
+
+    $('#filter_lokasi, #filter_tahun').on('change', function() {
+        table.draw();
+    });
+
+    $('#btn_reset').on('click', function() {
+        $('#filter_lokasi').val('');
+        $('#filter_tahun').val('');
+        table.draw();
+    });
+
+    // Paper selection styling
+    document.querySelectorAll('.inv-paper-radio').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.inv-paper-card').forEach(c => c.classList.remove('selected-paper'));
+            this.closest('label').querySelector('.inv-paper-card').classList.add('selected-paper');
+        });
+    });
+
+    // Orientation selection styling
+    document.querySelectorAll('.inv-orientation-radio').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.inv-orientation-card').forEach(c => c.classList.remove('selected-orientation'));
+            this.closest('label').querySelector('.inv-orientation-card').classList.add('selected-orientation');
+        });
+    });
+
+    // Generate PDF Click
+    var btnGenInvPdf = document.getElementById('btn_generate_inv_pdf');
+    if (btnGenInvPdf) {
+        btnGenInvPdf.addEventListener('click', function() {
+            var paperEl = document.querySelector('.inv-paper-radio:checked');
+            var orientationEl = document.querySelector('.inv-orientation-radio:checked');
+
+            var paper = paperEl ? paperEl.value : 'a4';
+            var orientation = orientationEl ? orientationEl.value : 'landscape';
+
+            var params = new URLSearchParams({
+                lokasi: $('#filter_lokasi').val(),
+                tahun: $('#filter_tahun').val(),
+                paper: paper,
+                orientation: orientation
+            });
+
+            var url = '{{ route("inventaris.pdf") }}?' + params.toString();
+            window.open(url, '_blank');
+
+            var modalEl = document.getElementById('modalInventarisPdfOptions');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        });
+    }
+});
 </script>
+

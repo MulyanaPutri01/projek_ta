@@ -260,14 +260,30 @@ class LaporanKeuanganController extends Controller
         $countPengeluaran = $keuangan->where('kategori_id', 2)->count();
 
         extract($meta);
+
+        $paper = strtolower($request->get('paper', 'a4'));
+        $orientation = strtolower($request->get('orientation', 'landscape'));
+
+        if (!in_array($orientation, ['portrait', 'landscape'])) {
+            $orientation = 'landscape';
+        }
+
         $pdf = Pdf::loadView('laporan.pdf', compact(
             'keuangan', 'totalPemasukan', 'totalPengeluaran', 'totalSaldo',
             'filter', 'tahun', 'bulan', 'namaBulan', 'start', 'end',
-            'profil', 'ketuaTakmir', 'bendahara', 'countPemasukan', 'countPengeluaran'
-        ))->setPaper('a4', 'landscape');
+            'profil', 'ketuaTakmir', 'bendahara', 'countPemasukan', 'countPengeluaran',
+            'paper', 'orientation'
+        ));
 
-        $namaFile = 'Laporan_Keuangan_' . ($profil->nama_masjid ? str_replace(' ', '_', $profil->nama_masjid) : 'Masjid') . '_' . date('Ymd_His') . '.pdf';
+        if ($paper === 'f4' || $paper === 'folio') {
+            // Standar F4 / Folio Indonesia: 215mm x 330mm = 609.45pt x 935.43pt
+            $pdf->setPaper([0, 0, 609.45, 935.43], $orientation);
+        } else {
+            $pdf->setPaper('a4', $orientation);
+        }
 
-        return $pdf->download($namaFile);
+        $namaFile = 'Laporan_Keuangan_' . ($profil->nama_masjid ? str_replace(' ', '_', $profil->nama_masjid) : 'Masjid') . '_' . $paper . '_' . $orientation . '_' . date('Ymd_His') . '.pdf';
+
+        return $pdf->stream($namaFile);
     }
 }

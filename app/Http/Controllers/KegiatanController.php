@@ -277,5 +277,18 @@ class KegiatanController extends Controller
 
         return view('kegiatan.calendar', compact('totalKegiatan', 'bulanIni', 'mendatang'));
     }
+
+    /**
+     * Public calendar - accessible without login (for landing page link)
+     */
+    public function publicCalendar()
+    {
+        $totalKegiatan = Kegiatan::count();
+        $bulanIni = Kegiatan::whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year)->count();
+        $mendatang = Kegiatan::where('tanggal', '>=', Carbon::today()->toDateString())->count();
+
+        return view('kegiatan.calendar-public', compact('totalKegiatan', 'bulanIni', 'mendatang'));
+    }
 }
+
 

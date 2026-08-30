@@ -138,5 +138,6 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
 // Public / General Routes
 // -------------------------------------------------------------
 Route::get('/api/kegiatan', [KegiatanController::class, 'getEvents'])->name('kegiatan.api');
-Route::get('/kegiatan-calendar', [KegiatanController::class, 'calendar'])->name('kegiatan.calendar');
+Route::get('/kegiatan-calendar', [KegiatanController::class, 'publicCalendar'])->name('kegiatan.calendar');
 Route::get('/inventaris-pdf', [InventarisController::class, 'exportPdf'])->name('inventaris.pdf');
+

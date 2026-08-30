@@ -5,28 +5,40 @@
     <title>Laporan Keuangan {{ $profil->nama_masjid ?? 'Masjid Al-Ikhlas' }}</title>
     <style>
         @page {
-            margin: 12mm 15mm 15mm 15mm;
-            size: a4 landscape;
+            @if(($orientation ?? 'landscape') === 'portrait')
+                margin-top: 40pt;
+                margin-bottom: 40pt;
+                margin-left: 50pt;
+                margin-right: 50pt;
+            @else
+                margin-top: 35pt;
+                margin-bottom: 35pt;
+                margin-left: 45pt;
+                margin-right: 45pt;
+            @endif
         }
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
         body {
             font-family: 'DejaVu Sans', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 8.5pt;
+            font-size: {{ ($orientation ?? 'landscape') === 'portrait' ? '7.5pt' : '8pt' }};
             color: #1e293b;
             background: #ffffff;
-            line-height: 1.35;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+        .print-wrapper {
+            width: 100%;
         }
 
         /* ===== KOP SURAT RESMI ===== */
         .kop-surat {
             width: 100%;
-            margin-bottom: 12px;
-            border-bottom: 3px double #065f46;
-            padding-bottom: 8px;
+            margin-bottom: 14pt;
+            border-bottom: 2.5pt double #065f46;
+            padding-bottom: 8pt;
         }
         .kop-table {
             width: 100%;
@@ -36,15 +48,16 @@
             vertical-align: middle;
         }
         .bismillah-text {
-            font-size: 11pt;
+            font-size: 9pt;
             color: #065f46;
-            font-weight: bold;
+            font-weight: 700;
             text-align: center;
-            margin-bottom: 3px;
-            letter-spacing: 1px;
+            margin-bottom: 2pt;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         .nama-masjid {
-            font-size: 14pt;
+            font-size: 13pt;
             font-weight: 800;
             color: #065f46;
             text-transform: uppercase;
@@ -67,10 +80,10 @@
         /* ===== JUDUL LAPORAN ===== */
         .judul-laporan-container {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 12pt;
         }
         .judul-laporan {
-            font-size: 11pt;
+            font-size: 10.5pt;
             font-weight: 700;
             color: #0f172a;
             text-transform: uppercase;
@@ -78,86 +91,86 @@
             text-decoration: underline;
         }
         .periode-laporan {
-            font-size: 8.5pt;
+            font-size: 8pt;
             color: #334155;
             font-weight: 600;
-            margin-top: 3px;
+            margin-top: 2pt;
         }
 
         /* ===== RINGKASAN EKSEKUTIF (SUMMARY CARDS) ===== */
         .stat-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 8px 0;
-            margin-bottom: 14px;
+            border-spacing: 8pt 0;
+            margin-bottom: 14pt;
         }
         .stat-card {
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 8pt 10pt;
+            border-radius: 4pt;
             vertical-align: middle;
         }
         .stat-card.income {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
-            border-left: 4px solid #16a34a;
+            border-left: 3.5pt solid #16a34a;
         }
         .stat-card.expense {
             background: #fef2f2;
             border: 1px solid #fecaca;
-            border-left: 4px solid #dc2626;
+            border-left: 3.5pt solid #dc2626;
         }
         .stat-card.balance {
             background: #f0fdfa;
             border: 1px solid #99f6e4;
-            border-left: 4px solid #0d9488;
+            border-left: 3.5pt solid #0d9488;
         }
         .stat-card.status {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 4px solid #64748b;
+            border-left: 3.5pt solid #64748b;
         }
         .stat-title {
-            font-size: 7pt;
+            font-size: 6.8pt;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #64748b;
             font-weight: 600;
         }
         .stat-value {
-            font-size: 10.5pt;
+            font-size: 10pt;
             font-weight: 800;
-            margin-top: 2px;
+            margin-top: 2pt;
         }
         .stat-card.income .stat-value { color: #15803d; }
         .stat-card.expense .stat-value { color: #b91c1c; }
         .stat-card.balance .stat-value { color: #0f766e; }
         .stat-card.status .stat-value { color: #334155; }
         .stat-sub {
-            font-size: 6.5pt;
+            font-size: 6.2pt;
             color: #94a3b8;
-            margin-top: 1px;
+            margin-top: 1pt;
         }
 
         /* ===== TABEL DATA UTAMA ===== */
         .table-data {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 14pt;
         }
         .table-data thead th {
             background: #065f46;
             color: #ffffff;
-            font-size: 8pt;
+            font-size: 7.5pt;
             font-weight: 700;
-            padding: 6px 7px;
+            padding: 5pt 6pt;
             border: 1px solid #044e3a;
             text-align: center;
             letter-spacing: 0.3px;
         }
         .table-data tbody tr td {
-            padding: 5px 6px;
+            padding: 4.5pt 6pt;
             border: 1px solid #cbd5e1;
-            font-size: 8pt;
+            font-size: 7.5pt;
             vertical-align: middle;
         }
         .table-data tbody tr:nth-child(even) {
@@ -173,9 +186,9 @@
         /* Badges */
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 7pt;
+            padding: 1.5pt 5pt;
+            border-radius: 3pt;
+            font-size: 6.5pt;
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -192,9 +205,9 @@
         .badge-activity {
             background: #e0f2fe;
             color: #0369a1;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 7pt;
+            padding: 1pt 4pt;
+            border-radius: 2pt;
+            font-size: 6.5pt;
         }
 
         /* Helpers */
@@ -212,14 +225,14 @@
             background: #e2e8f0;
             border: 1.5px solid #94a3b8;
             font-weight: 800;
-            padding: 6px 7px;
-            font-size: 8.5pt;
+            padding: 5.5pt 6pt;
+            font-size: 8pt;
         }
 
         /* ===== TANDA TANGAN & PENGESAHAN ===== */
         .ttd-container {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 18pt;
             page-break-inside: avoid;
         }
         .ttd-table {
@@ -229,10 +242,10 @@
         .ttd-table td {
             vertical-align: top;
             text-align: center;
-            font-size: 8.5pt;
+            font-size: 8pt;
         }
         .ttd-space {
-            height: 55px;
+            height: 50pt;
         }
         .ttd-name {
             font-weight: 700;
@@ -240,35 +253,36 @@
             color: #0f172a;
         }
         .ttd-role {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #475569;
         }
 
         /* ===== FOOTER DOKUMEN ===== */
         .doc-footer {
-            margin-top: 18px;
-            padding-top: 6px;
+            margin-top: 16pt;
+            padding-top: 6pt;
             border-top: 1px dashed #cbd5e1;
-            font-size: 7pt;
+            font-size: 6.8pt;
             color: #94a3b8;
             text-align: center;
         }
         .no-data {
             text-align: center;
             color: #94a3b8;
-            padding: 20px;
+            padding: 15pt;
             font-style: italic;
         }
     </style>
 </head>
 <body>
+<div class="print-wrapper">
 
     {{-- ================= KOP SURAT RESMI ================= --}}
     <div class="kop-surat">
         <table class="kop-table">
             <tr>
                 <td style="text-align: center;">
-                    <div class="bismillah-text">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                    <div class="bismillah-text">BISMILLAHIRRAHMANIRRAHIM</div>
                     <div class="nama-masjid">PENGURUS TAKMIR {{ $profil->nama_masjid ?? 'MASJID AL-IKHLAS' }}</div>
                     <div class="alamat-masjid">{{ $profil->alamat ?? 'Dukuh Semendot, Desa Karangmulya, Kec. Suradadi, Kab. Tegal, Jawa Tengah' }}</div>
                     <div class="kontak-masjid">Nomor Telepon / WhatsApp: {{ $profil->telepon ?? '0812-3456-7890' }} &nbsp;|&nbsp; Website Resmi SIMAS</div>
@@ -416,5 +430,6 @@
         Dokumen ini diterbitkan secara resmi melalui Sistem Informasi Manajemen Masjid (SIMAS) pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i:s') }} WIB.
     </div>
 
+</div>
 </body>
 </html>

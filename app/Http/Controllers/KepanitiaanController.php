@@ -216,7 +216,7 @@ class KepanitiaanController extends Controller
     /**
      * Cetak Surat Keputusan (SK) Susunan Panitia Kegiatan ke PDF
      */
-    public function skPdf($kegiatan_id)
+    public function skPdf(Request $request, $kegiatan_id)
     {
         $kegiatan = Kegiatan::findOrFail($kegiatan_id);
         $profil = ProfilMasjid::first();
@@ -245,11 +245,26 @@ class KepanitiaanController extends Controller
             return $pimpinanInti->contains('id', $p->id);
         })->groupBy('posisi_id');
 
+        $paper = strtolower($request->get('paper', 'a4'));
+        $orientation = strtolower($request->get('orientation', 'portrait'));
+
+        if (!in_array($orientation, ['portrait', 'landscape'])) {
+            $orientation = 'portrait';
+        }
+
         $pdf = Pdf::loadView('kepanitiaan.sk_pdf', compact(
-            'kegiatan', 'profil', 'ketuaTakmir', 'panitiaList', 'pimpinanInti', 'seksiSeksi'
-        ))->setPaper('a4', 'portrait');
+            'kegiatan', 'profil', 'ketuaTakmir', 'panitiaList', 'pimpinanInti', 'seksiSeksi',
+            'paper', 'orientation'
+        ));
+
+        if ($paper === 'f4' || $paper === 'folio') {
+            // Standar F4 / Folio Indonesia: 215mm x 330mm = 609.45pt x 935.43pt
+            $pdf->setPaper([0, 0, 609.45, 935.43], $orientation);
+        } else {
+            $pdf->setPaper('a4', $orientation);
+        }
 
         $cleanTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $kegiatan->nama_kegiatan);
-        return $pdf->download('SK_Panitia_' . $cleanTitle . '.pdf');
+        return $pdf->stream('SK_Panitia_' . $cleanTitle . '_' . $paper . '_' . $orientation . '.pdf');
     }
 }

@@ -15,7 +15,7 @@
 
     <div class="container-fluid">
         <!-- Welcome Hero Banner -->
-        <div class="dashboard-welcome-banner d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="dashboard-welcome-banner d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div>
                 <h2>Selamat Datang, {{ Auth::user()->nama_takmir }}!</h2>
                 <p>Kelola jadwal kegiatan dakwah, kepanitiaan acara, inventaris barang, dan pemantauan kondisi perlengkapan masjid.</p>
@@ -26,19 +26,20 @@
             </div>
         </div>
 
-        <div class="row g-3">
+        <!-- Metric Stat Cards -->
+        <div class="row g-3 mb-4">
             <!-- Kegiatan Card -->
-            <div class="col-xxl-4 col-md-4">
-                <div class="card info-card sales-card h-100">
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card sales-card h-100 shadow-sm border-0">
                     <div class="card-body">
-                        <h5 class="card-title">Agenda Kegiatan</h5>
+                        <h5 class="card-title text-muted text-uppercase fs-7 mb-2">Agenda Kegiatan</h5>
                         <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary-light">
-                                <i class="bi bi-calendar-event text-primary"></i>
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary-light text-primary" style="width: 48px; height: 48px;">
+                                <i class="bi bi-calendar-event fs-4"></i>
                             </div>
                             <div class="ps-3">
-                                <h6>{{ $totalKegiatan }}</h6>
-                                <span class="text-primary small pt-1 fw-bold">Kegiatan Terjadwal</span>
+                                <h5 class="fw-bold mb-0 text-primary">{{ $totalKegiatan }} Agenda</h5>
+                                <span class="text-muted small">Kegiatan Terjadwal</span>
                             </div>
                         </div>
                     </div>
@@ -46,17 +47,17 @@
             </div>
 
             <!-- Kepanitiaan Card -->
-            <div class="col-xxl-4 col-md-4">
-                <div class="card info-card revenue-card h-100">
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card revenue-card h-100 shadow-sm border-0">
                     <div class="card-body">
-                        <h5 class="card-title">Struktur Panitia</h5>
+                        <h5 class="card-title text-muted text-uppercase fs-7 mb-2">Struktur Panitia</h5>
                         <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success-light">
-                                <i class="bi bi-people text-success"></i>
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success-light text-success" style="width: 48px; height: 48px;">
+                                <i class="bi bi-person-workspace fs-4"></i>
                             </div>
                             <div class="ps-3">
-                                <h6>{{ $totalKepanitiaan }}</h6>
-                                <span class="text-success small pt-1 fw-bold">Penugasan Panitia</span>
+                                <h5 class="fw-bold mb-0 text-success">{{ $totalKepanitiaan }} Posisi</h5>
+                                <span class="text-muted small">Penugasan Relawan & Panitia</span>
                             </div>
                         </div>
                     </div>
@@ -64,17 +65,35 @@
             </div>
 
             <!-- Inventaris Card -->
-            <div class="col-xxl-4 col-md-4">
-                <div class="card info-card customers-card h-100">
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card customers-card h-100 shadow-sm border-0">
                     <div class="card-body">
-                        <h5 class="card-title">Total Inventaris</h5>
+                        <h5 class="card-title text-muted text-uppercase fs-7 mb-2">Total Inventaris</h5>
                         <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning-light">
-                                <i class="bi bi-box-seam text-warning"></i>
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning-light text-warning" style="width: 48px; height: 48px;">
+                                <i class="bi bi-boxes fs-4"></i>
                             </div>
                             <div class="ps-3">
-                                <h6>{{ $totalInventaris }}</h6>
-                                <span class="text-warning small pt-1 fw-bold">Barang & Perlengkapan</span>
+                                <h5 class="fw-bold mb-0 text-dark">{{ $totalInventaris }} Barang</h5>
+                                <span class="text-muted small">Aset & Perlengkapan</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Takmir Card -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card info-card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted text-uppercase fs-7 mb-2">Pengurus Takmir</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info-light text-info" style="width: 48px; height: 48px;">
+                                <i class="bi bi-people fs-4"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h5 class="fw-bold mb-0 text-dark">{{ $totalTakmir }} Personil</h5>
+                                <span class="text-muted small">Divisi & Pengurus Aktif</span>
                             </div>
                         </div>
                     </div>
@@ -82,10 +101,43 @@
             </div>
         </div>
 
+        <!-- ================= VISUAL CHARTS ROW ================= -->
+        <div class="row g-3 mb-4">
+            <!-- Main Event Trend Chart -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body pt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="card-title mb-0 fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Frekuensi Agenda Kegiatan Dakwah (Tahun {{ $currentYear }})</h5>
+                                <small class="text-muted">Jumlah agenda acara, pengajian, dan kegiatan masjid per bulan</small>
+                            </div>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-calendar3 me-1"></i>Tahun {{ $currentYear }}</span>
+                        </div>
+                        <div id="kegiatanChart" style="min-height: 320px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventaris Donut Chart -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body pt-3">
+                        <h5 class="card-title mb-1 fw-bold fs-6"><i class="bi bi-pie-chart-fill text-warning me-2"></i>Kondisi Fisik Barang Inventaris</h5>
+                        <small class="text-muted d-block mb-3">Status kelaikan operasional {{ $totalInventaris }} aset masjid</small>
+                        <div id="sekretarisKondisiChart" style="min-height: 250px;"></div>
+                        <div class="mt-2 pt-2 border-top text-center">
+                            <a href="{{ route('catatan.index') }}" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-clipboard-pulse me-1"></i> Lihat Buku Catatan Kondisi</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Access Shortcuts -->
-        <div class="row g-3 mt-1 mb-3">
+        <div class="row g-3 mb-4">
             <div class="col-md-3 col-sm-6">
-                <a href="{{ route('kegiatan.index') }}" class="card text-decoration-none h-100 border p-3 d-flex flex-row align-items-center gap-3">
+                <a href="{{ route('kegiatan.index') }}" class="card text-decoration-none h-100 shadow-sm border-0 p-3 d-flex flex-row align-items-center gap-3 transition-hover">
                     <div class="rounded-circle bg-primary-light p-3 text-primary"><i class="bi bi-calendar-check fs-4"></i></div>
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">Jadwal Kegiatan</h6>
@@ -94,16 +146,16 @@
                 </a>
             </div>
             <div class="col-md-3 col-sm-6">
-                <a href="{{ route('kepanitiaan.index') }}" class="card text-decoration-none h-100 border p-3 d-flex flex-row align-items-center gap-3">
+                <a href="{{ route('kepanitiaan.index') }}" class="card text-decoration-none h-100 shadow-sm border-0 p-3 d-flex flex-row align-items-center gap-3 transition-hover">
                     <div class="rounded-circle bg-success-light p-3 text-success"><i class="bi bi-person-workspace fs-4"></i></div>
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">Kepanitiaan</h6>
-                        <small class="text-muted">Jobdesk panitia</small>
+                        <small class="text-muted">Jobdesk & SK panitia</small>
                     </div>
                 </a>
             </div>
             <div class="col-md-3 col-sm-6">
-                <a href="{{ route('inventaris.index') }}" class="card text-decoration-none h-100 border p-3 d-flex flex-row align-items-center gap-3">
+                <a href="{{ route('inventaris.index') }}" class="card text-decoration-none h-100 shadow-sm border-0 p-3 d-flex flex-row align-items-center gap-3 transition-hover">
                     <div class="rounded-circle bg-warning-light p-3 text-warning"><i class="bi bi-boxes fs-4"></i></div>
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">Data Inventaris</h6>
@@ -112,7 +164,7 @@
                 </a>
             </div>
             <div class="col-md-3 col-sm-6">
-                <a href="{{ route('catatan.index') }}" class="card text-decoration-none h-100 border p-3 d-flex flex-row align-items-center gap-3">
+                <a href="{{ route('catatan.index') }}" class="card text-decoration-none h-100 shadow-sm border-0 p-3 d-flex flex-row align-items-center gap-3 transition-hover">
                     <div class="rounded-circle bg-info-light p-3 text-info"><i class="bi bi-clipboard-pulse fs-4"></i></div>
                     <div>
                         <h6 class="mb-0 fw-bold text-dark">Catatan Kondisi</h6>
@@ -122,15 +174,16 @@
             </div>
         </div>
 
-        <div class="card">
+        <!-- Upcoming Events Table -->
+        <div class="card shadow-sm border-0">
             <div class="card-body pt-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">Agenda Kegiatan Mendatang</h5>
-                    <a href="{{ route('kegiatan.calendar') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-calendar3 me-1"></i> Buka Kalender</a>
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Agenda Kegiatan Mendatang</h5>
+                    <a href="{{ route('kegiatan.calendar') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-calendar3 me-1"></i> Buka Kalender Agenda</a>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-hover align-middle">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0">
                         <thead class="table-light text-center">
                             <tr>
                                 <th style="width: 50px;">No</th>
@@ -168,3 +221,84 @@
 </main>
 
 @include('layouts.footer')
+
+<!-- ================= APEXCHARTS INITIALIZATION ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Kegiatan Column Chart
+    const kegiatanOptions = {
+        series: [{
+            name: 'Jumlah Agenda',
+            data: {!! json_encode($chartKegiatan) !!}
+        }],
+        chart: {
+            height: 320,
+            type: 'bar',
+            toolbar: { show: false },
+            fontFamily: 'Inter, sans-serif'
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 5,
+                columnWidth: '45%',
+                dataLabels: { position: 'top' }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return val > 0 ? val + " Kegiatan" : "";
+            },
+            offsetY: -20,
+            style: { fontSize: '11px', colors: ["#334155"] }
+        },
+        colors: ['#3b82f6'],
+        xaxis: {
+            categories: {!! json_encode($chartMonths) !!},
+            labels: { style: { colors: '#64748b', fontSize: '12px' } }
+        },
+        yaxis: {
+            labels: {
+                formatter: function (val) { return Math.floor(val); },
+                style: { colors: '#64748b' }
+            },
+            min: 0,
+            forceNiceScale: true
+        },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }
+    };
+    new ApexCharts(document.querySelector("#kegiatanChart"), kegiatanOptions).render();
+
+    // 2. Inventaris Kondisi Donut Chart
+    const kondisiOptions = {
+        series: [{{ $kondisiInventaris['Baik'] }}, {{ $kondisiInventaris['Perbaikan'] }}, {{ $kondisiInventaris['Rusak'] }}],
+        labels: ['Kondisi Baik', 'Perlu Perbaikan', 'Kondisi Rusak'],
+        chart: {
+            type: 'donut',
+            height: 250,
+            fontFamily: 'Inter, sans-serif'
+        },
+        colors: ['#10b981', '#f59e0b', '#ef4444'],
+        legend: { position: 'bottom', fontSize: '12px' },
+        dataLabels: { enabled: false },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total Aset',
+                            formatter: function (w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0) + ' Barang';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    new ApexCharts(document.querySelector("#sekretarisKondisiChart"), kondisiOptions).render();
+});
+</script>
