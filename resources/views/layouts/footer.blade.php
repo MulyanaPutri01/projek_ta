@@ -1,11 +1,12 @@
 <!-- ======= Footer ======= -->
 <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; Copyright <strong><span>Sistem Manajemen Masjid Al-Ikhlas</span></strong>. All Rights Reserved
+        &copy; Copyright <strong><span>Sistem Manajemen Masjid Al-Ikhlas</span></strong>. All Rights Reserved
     </div>
 </footer><!-- End Footer -->
 
-<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+        class="bi bi-arrow-up-short"></i></a>
 
 <!-- Vendor JS Files -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -13,7 +14,7 @@
 <script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/chart.js/chart.umd.js') }}"></script>
 <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/quill/quill.min.js') }}"></script>
+{{--  <script src="{{ asset('assets/vendor/quill/quill.min.js') }}"></script>  --}}
 <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.4/main.min.js"></script>
@@ -36,21 +37,21 @@
 <script>
     $.extend(true, $.fn.dataTable.defaults, {
         language: {
-            "sEmptyTable":   "Tidak ada data yang tersedia pada tabel ini",
-            "sProcessing":   "<div class='spinner-border spinner-border-sm text-primary' role='status'></div> Memproses...",
-            "sLengthMenu":   "Tampilkan _MENU_ entri",
-            "sZeroRecords":  "Tidak ditemukan data yang sesuai",
-            "sInfo":         "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-            "sInfoEmpty":    "Menampilkan 0 sampai 0 dari 0 entri",
+            "sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
+            "sProcessing": "<div class='spinner-border spinner-border-sm text-primary' role='status'></div> Memproses...",
+            "sLengthMenu": "Tampilkan _MENU_ entri",
+            "sZeroRecords": "Tidak ditemukan data yang sesuai",
+            "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+            "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
             "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
-            "sInfoPostFix":  "",
-            "sSearch":       "Cari:",
-            "sUrl":          "",
+            "sInfoPostFix": "",
+            "sSearch": "Cari:",
+            "sUrl": "",
             "oPaginate": {
-                "sFirst":    "Pertama",
+                "sFirst": "Pertama",
                 "sPrevious": "Sebelumnya",
-                "sNext":     "Selanjutnya",
-                "sLast":     "Terakhir"
+                "sNext": "Selanjutnya",
+                "sLast": "Terakhir"
             }
         },
         responsive: true
@@ -156,7 +157,7 @@
     // 4. Intercept All Delete Form Submissions Globally
     document.addEventListener("DOMContentLoaded", function() {
         // Flash Alerts from Session
-        @if(session('success'))
+        @if (session('success'))
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
@@ -168,7 +169,7 @@
             });
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             Swal.fire({
                 icon: 'error',
                 title: 'Terjadi Kesalahan!',
@@ -178,7 +179,7 @@
             });
         @endif
 
-        @if(session('warning'))
+        @if (session('warning'))
             Swal.fire({
                 icon: 'warning',
                 title: 'Peringatan!',
@@ -188,7 +189,7 @@
             });
         @endif
 
-        @if(session('info'))
+        @if (session('info'))
             Swal.fire({
                 icon: 'info',
                 title: 'Informasi',
@@ -198,14 +199,14 @@
             });
         @endif
 
-        @if(isset($errors) && $errors->any())
+        @if (isset($errors) && $errors->any())
             Swal.fire({
                 icon: 'error',
                 title: 'Validasi Gagal!',
                 html: `<div class="text-start small mt-2">
                     <p class="mb-1 fw-bold text-danger">Silakan periksa input berikut:</p>
                     <ul class="mb-0 ps-3">
-                        @foreach($errors->all() as $error)
+                        @foreach ($errors->all() as $error)
                             <li>{!! addslashes($error) !!}</li>
                         @endforeach
                     </ul>
@@ -226,7 +227,8 @@
                 e.stopImmediatePropagation();
 
                 const match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
-                const confirmText = (match && match[1]) ? match[1] : 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+                const confirmText = (match && match[1]) ? match[1] :
+                    'Apakah Anda yakin ingin melanjutkan tindakan ini?';
                 const form = btn.closest('form');
 
                 Swal.fire({
@@ -242,8 +244,10 @@
                     focusCancel: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.showSwalLoading('Memproses...', 'Sedang memproses tindakan Anda');
-                        if (btn.tagName === 'A' && btn.href && btn.href !== '#' && !btn.href.startsWith('javascript:')) {
+                        window.showSwalLoading('Memproses...',
+                        'Sedang memproses tindakan Anda');
+                        if (btn.tagName === 'A' && btn.href && btn.href !== '#' && !btn.href
+                            .startsWith('javascript:')) {
                             window.location.href = btn.href;
                         } else if (form) {
                             form.setAttribute('data-swal-confirmed', 'true');
@@ -263,16 +267,17 @@
 
             // Check if form is a DELETE request or has confirm delete class
             const hasDeleteMethod = form.querySelector('input[name="_method"][value="DELETE"]') ||
-                                    form.getAttribute('method')?.toUpperCase() === 'DELETE' ||
-                                    form.classList.contains('form-delete') ||
-                                    (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm'));
+                form.getAttribute('method')?.toUpperCase() === 'DELETE' ||
+                form.classList.contains('form-delete') ||
+                (form.getAttribute('onsubmit') && form.getAttribute('onsubmit').includes('confirm'));
 
             if (hasDeleteMethod) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
 
                 // Extract custom message from onsubmit or data attribute if present
-                let confirmText = form.getAttribute('data-confirm-text') || 'Data yang dihapus tidak dapat dipulihkan kembali!';
+                let confirmText = form.getAttribute('data-confirm-text') ||
+                    'Data yang dihapus tidak dapat dipulihkan kembali!';
                 const onsubmitAttr = form.getAttribute('onsubmit');
                 if (onsubmitAttr && onsubmitAttr.includes('confirm(')) {
                     const match = onsubmitAttr.match(/confirm\(['"](.*?)['"]\)/);
@@ -295,11 +300,13 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         form.setAttribute('data-swal-confirmed', 'true');
-                        window.showSwalLoading('Menghapus Data...', 'Sedang memproses penghapusan data');
+                        window.showSwalLoading('Menghapus Data...',
+                            'Sedang memproses penghapusan data');
                         form.submit();
                     }
                 });
-            } else if (!form.classList.contains('no-loading') && !form.classList.contains('dataTables_filter') && form.getAttribute('target') !== '_blank') {
+            } else if (!form.classList.contains('no-loading') && !form.classList.contains(
+                    'dataTables_filter') && form.getAttribute('target') !== '_blank') {
                 // Show saving loading on standard form submission if valid
                 if (typeof form.checkValidity === 'function' ? form.checkValidity() : true) {
                     window.showSwalLoading('Menyimpan Data...', 'Mohon tunggu, sedang memproses data');
@@ -327,7 +334,10 @@
 
         window.terbilangRupiah = function(n) {
             if (isNaN(n) || n <= 0) return 'Nol Rupiah';
-            const satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+            const satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan',
+                'Sembilan', 'Sepuluh', 'Sebelas'
+            ];
+
             function kata(angka) {
                 angka = Math.floor(angka);
                 if (angka < 12) return satuan[angka];
@@ -337,8 +347,10 @@
                 if (angka < 1000) return kata(Math.floor(angka / 100)) + ' Ratus ' + kata(angka % 100);
                 if (angka < 2000) return 'Seribu ' + kata(angka - 1000);
                 if (angka < 1000000) return kata(Math.floor(angka / 1000)) + ' Ribu ' + kata(angka % 1000);
-                if (angka < 1000000000) return kata(Math.floor(angka / 1000000)) + ' Juta ' + kata(angka % 1000000);
-                if (angka < 1000000000000) return kata(Math.floor(angka / 1000000000)) + ' Milyar ' + kata(angka % 1000000000);
+                if (angka < 1000000000) return kata(Math.floor(angka / 1000000)) + ' Juta ' + kata(angka %
+                    1000000);
+                if (angka < 1000000000000) return kata(Math.floor(angka / 1000000000)) + ' Milyar ' + kata(
+                    angka % 1000000000);
                 return '';
             }
             return (kata(n) + ' Rupiah').replace(/\s+/g, ' ').trim();
@@ -358,4 +370,5 @@
 @yield('script')
 
 </body>
+
 </html>

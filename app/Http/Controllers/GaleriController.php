@@ -22,7 +22,7 @@ class GaleriController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Galeri::with(['kegiatan', 'takmir'])->select('galeri.*');
+            $query = Galeri::with(['kegiatan', 'takmir'])->select('galeri.*')->orderBy('tanggal', 'desc');
 
             if ($request->filled('kegiatan_id')) {
                 $query->where('kegiatan_id', $request->kegiatan_id);
@@ -245,4 +245,3 @@ class GaleriController extends Controller
         return redirect()->route('galeri.index')->with('success', 'Foto dokumentasi berhasil dihapus.');
     }
 }
-
