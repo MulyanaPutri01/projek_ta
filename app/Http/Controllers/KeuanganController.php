@@ -20,7 +20,7 @@ class KeuanganController extends Controller
         $this->middleware('permission:keuangan-edit')->only(['edit', 'update']);
         $this->middleware('permission:keuangan-delete')->only(['destroy']);
     }
-    
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -29,8 +29,9 @@ class KeuanganController extends Controller
                 'donatur:id,nama_donatur',
                 'kegiatan:id,nama_kegiatan',
                 'takmir:id,nama_takmir'
-            ])->select('keuangan.*');
+            ])->select('keuangan.*')->orderBy('tanggal', 'asc');
 
+            // dd($query);
             if ($request->filled('kategori_id')) {
                 $query->where('kategori_id', $request->kategori_id);
             }
@@ -153,7 +154,7 @@ class KeuanganController extends Controller
         $kategoris = Kategori::all();
         $donaturs = Donatur::orderBy('nama_donatur', 'asc')->get();
         $kegiatans = Kegiatan::orderBy('tanggal', 'desc')->get();
-        
+
         $stats = Keuangan::selectRaw("
             SUM(CASE WHEN kategori_id = 1 THEN nominal ELSE 0 END) as total_pemasukan,
             SUM(CASE WHEN kategori_id = 2 THEN nominal ELSE 0 END) as total_pengeluaran
@@ -173,7 +174,7 @@ class KeuanganController extends Controller
             'sumber_keuangan' => 'required|string|max:255',
             'keterangan'      => 'nullable|string|max:255',
             'nominal'         => 'required|numeric|min:1',
-            'kategori_id'     => 'required|exists:kategori,id', 
+            'kategori_id'     => 'required|exists:kategori,id',
             'donatur_id'      => 'nullable|exists:donatur,id',
             'kegiatan_id'     => 'nullable|exists:kegiatan,id',
         ], [
