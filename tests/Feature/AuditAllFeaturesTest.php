@@ -404,4 +404,62 @@ class AuditAllFeaturesTest extends TestCase
         $deleteResponse->assertRedirect(route('permissions.index'));
         $this->assertNull(\Spatie\Permission\Models\Permission::find($updated->id));
     }
+
+    /** Test SoftDelete, Trash Center, and Restore Functionality */
+    public function test_soft_delete_and_restore_cycle()
+    {
+        if (!$this->adminUser) {
+            $this->markTestSkipped('No admin user found');
+        }
+
+        $this->actingAs($this->adminUser);
+
+        // 1. Create a Keuangan transaction
+        $transaksi = Keuangan::create([
+            'tanggal' => now()->toDateString(),
+            'sumber_keuangan' => 'Kas Test SoftDelete & Restore',
+            'keterangan' => 'Uji coba softdelete',
+            'nominal' => 250000,
+            'kategori_id' => 1,
+            'takmir_id' => $this->adminUser->id,
+        ]);
+
+        $this->assertNotNull(Keuangan::find($transaksi->id));
+
+        // 2. Perform delete -> Should trigger soft delete
+        $deleteResp = $this->delete("/keuangan/{$transaksi->id}");
+        $deleteResp->assertRedirect(route('keuangan.index'));
+
+        // Normal query should not find the record
+        $this->assertNull(Keuangan::find($transaksi->id));
+
+        // withTrashed query should still find the record with deleted_at set
+        $trashed = Keuangan::withTrashed()->find($transaksi->id);
+        $this->assertNotNull($trashed);
+        $this->assertNotNull($trashed->deleted_at);
+
+        // 3. Access Trash Center page
+        $trashPage = $this->get('/trash?tab=keuangan');
+        $trashPage->assertStatus(200);
+        $trashPage->assertSee('Kas Test SoftDelete & Restore');
+
+        // 4. Restore the transaction via TrashController
+        $restoreResp = $this->post("/trash/keuangan/{$transaksi->id}/restore");
+        $restoreResp->assertStatus(302);
+
+        // Record should now be back and visible to normal queries
+        $restored = Keuangan::find($transaksi->id);
+        $this->assertNotNull($restored);
+        $this->assertNull($restored->deleted_at);
+
+        // 5. Delete again and permanently force-delete via TrashController
+        $this->delete("/keuangan/{$transaksi->id}");
+        $this->assertNull(Keuangan::find($transaksi->id));
+
+        $forceDeleteResp = $this->delete("/trash/keuangan/{$transaksi->id}/force-delete");
+        $forceDeleteResp->assertStatus(302);
+
+        // Record should be completely gone from database
+        $this->assertNull(Keuangan::withTrashed()->find($transaksi->id));
+    }
 }

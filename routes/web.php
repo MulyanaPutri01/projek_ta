@@ -22,6 +22,7 @@ use App\Http\Controllers\KondisiController;
 use App\Http\Controllers\ProfilMasjidController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\TrashController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\DisplayMasjidController;
 
@@ -139,6 +140,13 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
     // Smart TV Digital Signage Settings
     Route::get('smart-tv/setting', [DisplayMasjidController::class, 'setting'])->name('admin.display.setting');
     Route::post('smart-tv/setting', [DisplayMasjidController::class, 'updateSetting'])->name('admin.display.update');
+
+    // Pusat Pemulihan Data (Recycle Bin / Soft Delete Restore)
+    Route::get('trash', [TrashController::class, 'index'])->name('trash.index');
+    Route::post('trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('trash.restore');
+    Route::post('trash/{type}/restore-all', [TrashController::class, 'restoreAll'])->name('trash.restoreAll');
+    Route::delete('trash/{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('trash.forceDelete');
+    Route::delete('trash/{type}/empty', [TrashController::class, 'emptyTrash'])->name('trash.empty');
 });
 
 // -------------------------------------------------------------

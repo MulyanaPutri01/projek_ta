@@ -276,5 +276,29 @@
             </a>
         </li>
 
+        <!-- ==========================================
+             Pusat Pemulihan Data (Recycle Bin / Trash)
+             ========================================== -->
+        <li class="nav-heading">PEMULIHAN DATA</li>
+        <li class="nav-item">
+            @php
+                $trashedCount = \App\Models\Keuangan::onlyTrashed()->count()
+                    + \App\Models\Donatur::onlyTrashed()->count()
+                    + \App\Models\Kegiatan::onlyTrashed()->count()
+                    + \App\Models\Inventaris::onlyTrashed()->count()
+                    + \App\Models\Takmir::onlyTrashed()->count();
+            @endphp
+            <a class="nav-link {{ request()->routeIs('trash.*') ? '' : 'collapsed' }}"
+                href="{{ route('trash.index') }}">
+                <i class="bi bi-recycle text-success"></i>
+                <span>Pusat Pemulihan (Trash)</span>
+                @if($trashedCount > 0)
+                    <span class="badge bg-danger text-white rounded-pill ms-auto px-2 py-0.5" style="font-size: 0.7rem;">
+                        {{ $trashedCount }}
+                    </span>
+                @endif
+            </a>
+        </li>
+
     </ul>
 </aside><!-- End Sidebar-->
