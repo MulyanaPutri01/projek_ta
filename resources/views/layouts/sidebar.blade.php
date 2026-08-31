@@ -5,7 +5,10 @@
              Dynamic Dashboard Navigation
              ========================================== -->
         <li class="nav-heading">MENU UTAMA</li>
-        @if (Auth::user()?->hasRole('admin') || Auth::user()?->can('role-list') || Auth::user()?->can('user-list'))
+        @php
+            $currentRoleName = strtolower(Auth::user()?->role?->nama_role ?? (Auth::user()?->roles->first()?->name ?? ''));
+        @endphp
+        @if ($currentRoleName === 'admin' || Auth::user()?->hasRole('admin') || Auth::user()?->can('role-list') || Auth::user()?->can('user-list'))
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? '' : 'collapsed' }}"
                     href="{{ route('admin.dashboard') }}">
@@ -13,7 +16,7 @@
                     <span>Dashboard Admin</span>
                 </a>
             </li>
-        @elseif(Auth::user()?->hasRole('bendahara') || Auth::user()?->can('keuangan-list'))
+        @elseif($currentRoleName === 'bendahara' || Auth::user()?->hasRole('bendahara') || Auth::user()?->can('keuangan-list'))
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('bendahara.dashboard') ? '' : 'collapsed' }}"
                     href="{{ route('bendahara.dashboard') }}">

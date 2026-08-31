@@ -324,4 +324,37 @@ class AuditAllFeaturesTest extends TestCase
         // Cleanup test user
         $bendahara2->delete();
     }
+
+    /** Test Registration as Bendahara and proper dashboard redirection */
+    public function test_registration_as_bendahara_assigns_correct_role_and_dashboard()
+    {
+        Takmir::where('username', 'bendahara_reg_test')->delete();
+
+        $response = $this->post('/register', [
+            'nama_takmir' => 'Bendahara Register Test',
+            'username' => 'bendahara_reg_test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role_id' => 2, // Bendahara
+        ]);
+
+        $response->assertRedirect('/dashboard');
+
+        $user = Takmir::where('username', 'bendahara_reg_test')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue($user->hasRole('bendahara'));
+
+        // Follow redirect to /dashboard
+        $dashResponse = $this->actingAs($user)->get('/dashboard');
+        $dashResponse->assertRedirect(route('bendahara.dashboard'));
+
+        // Check sidebar on bendahara dashboard
+        $bendaharaPage = $this->actingAs($user)->get('/bendahara-dashboard');
+        $bendaharaPage->assertStatus(200);
+        $bendaharaPage->assertSee('Dashboard Bendahara');
+        $bendaharaPage->assertDontSee('Dashboard Sekretaris');
+
+        // Cleanup
+        $user->delete();
+    }
 }

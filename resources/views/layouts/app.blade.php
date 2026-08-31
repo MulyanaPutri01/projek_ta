@@ -31,15 +31,18 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
                         @auth
-                            @if (auth()->user()->role->id_role === '1')
+                            @php
+                                $userRole = strtolower(auth()->user()->role?->nama_role ?? (auth()->user()->roles->first()?->name ?? ''));
+                            @endphp
+                            @if ($userRole === 'admin')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.dashboard') }}">Dashboard Admin</a>
                                 </li>
-                            @elseif (auth()->user()->role->id_role === '2')
+                            @elseif ($userRole === 'bendahara')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('bendahara.dashboard') }}">Dashboard Bendahara</a>
                                 </li>
-                            @elseif (auth()->user()->role->id_role === '3')
+                            @elseif ($userRole === 'sekretaris')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('sekretaris.dashboard') }}">Dashboard Sekretaris</a>
                                 </li>

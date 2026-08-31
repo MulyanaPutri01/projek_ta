@@ -46,6 +46,11 @@ class AuthController extends Controller
                 return back()->withErrors(['username' => 'Akun Anda sedang nonaktif. Silakan hubungi admin.']);
             }
 
+            // Sync Spatie role automatically on login if missing
+            if ($takmir->role && $takmir->roles->isEmpty()) {
+                $takmir->syncRoles([strtolower($takmir->role->nama_role)]);
+            }
+
             Auth::login($takmir);
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
@@ -76,6 +81,8 @@ class AuthController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak sesuai.',
         ]);
 
+        $selectedRole = Role::findOrFail($request->role_id);
+
         $takmir = new Takmir();
         $takmir->username = $request->username;
         $takmir->password = Hash::make($request->password);
@@ -83,6 +90,9 @@ class AuthController extends Controller
         $takmir->status = 'active'; // Default status aktif
         $takmir->nama_takmir = $request->nama_takmir;
         $takmir->save();
+
+        // Sinkronisasi peran Spatie Permission agar hak akses dan dashboard sesuai
+        $takmir->syncRoles([strtolower($selectedRole->nama_role)]);
 
         Auth::login($takmir);
         $request->session()->regenerate();
