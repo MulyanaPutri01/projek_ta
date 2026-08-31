@@ -70,14 +70,14 @@
                             </div>
                             @endif
 
-                            <form method="POST" action="{{ route('register') }}" class="row g-3">
+                            <form method="POST" action="{{ route('register') }}" class="row g-3" autocomplete="off">
                                 @csrf
 
                                 <div class="col-md-12">
                                     <label for="nama_takmir" class="form-label">Nama Lengkap</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person"></i></span>
-                                        <input type="text" name="nama_takmir" id="nama_takmir" class="form-control border-start-0 ps-0" placeholder="Nama lengkap takmir" value="{{ old('nama_takmir') }}" required>
+                                        <input type="text" name="nama_takmir" id="nama_takmir" class="form-control border-start-0 ps-0" placeholder="Nama lengkap takmir" value="{{ old('nama_takmir') }}" required autocomplete="off">
                                     </div>
                                 </div>
 
@@ -85,7 +85,7 @@
                                     <label for="username" class="form-label">Username</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-at"></i></span>
-                                        <input type="text" name="username" id="username" class="form-control border-start-0 ps-0" placeholder="Username login" value="{{ old('username') }}" required>
+                                        <input type="text" name="username" id="username" class="form-control border-start-0 ps-0" placeholder="Username login" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                                     </div>
                                 </div>
 
@@ -108,7 +108,10 @@
                                     <label for="password" class="form-label">Password</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
-                                        <input type="password" name="password" id="password" class="form-control border-start-0 ps-0" placeholder="Min. 8 karakter" required minlength="8">
+                                        <input type="password" name="password" id="password" class="form-control border-start-0 border-end-0 ps-0" placeholder="Min. 8 karakter" required minlength="8" autocomplete="new-password">
+                                        <button class="btn btn-outline-secondary border-start-0 bg-light" type="button" id="togglePassword">
+                                            <i class="bi bi-eye text-muted" id="eyeIcon"></i>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -116,7 +119,10 @@
                                     <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock-fill"></i></span>
-                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control border-start-0 ps-0" placeholder="Ulangi password" required minlength="8">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control border-start-0 border-end-0 ps-0" placeholder="Ulangi password" required minlength="8" autocomplete="new-password">
+                                        <button class="btn btn-outline-secondary border-start-0 bg-light" type="button" id="togglePasswordConfirm">
+                                            <i class="bi bi-eye text-muted" id="eyeIconConfirm"></i>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -153,5 +159,44 @@
 
     <!-- Vendor JS Files -->
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Toggle Show/Hide Password
+        const togglePassword = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#password');
+        const eyeIcon = document.querySelector('#eyeIcon');
+
+        if (togglePassword && passwordInput && eyeIcon) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                eyeIcon.classList.toggle('bi-eye');
+                eyeIcon.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // Toggle Show/Hide Confirm Password
+        const togglePasswordConfirm = document.querySelector('#togglePasswordConfirm');
+        const passwordConfirmInput = document.querySelector('#password_confirmation');
+        const eyeIconConfirm = document.querySelector('#eyeIconConfirm');
+
+        if (togglePasswordConfirm && passwordConfirmInput && eyeIconConfirm) {
+            togglePasswordConfirm.addEventListener('click', function () {
+                const type = passwordConfirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordConfirmInput.setAttribute('type', type);
+                eyeIconConfirm.classList.toggle('bi-eye');
+                eyeIconConfirm.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // Clear input history / autofill cache on page show
+        window.addEventListener('pageshow', function (event) {
+            const userInput = document.getElementById('username');
+            const passInput = document.getElementById('password');
+            const passConfInput = document.getElementById('password_confirmation');
+            if (userInput) userInput.value = '';
+            if (passInput) passInput.value = '';
+            if (passConfInput) passConfInput.value = '';
+        });
+    </script>
 </body>
 </html>
