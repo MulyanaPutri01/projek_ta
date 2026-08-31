@@ -124,6 +124,10 @@ class RoleController extends Controller
                 'role-create' => 'Menambah Peran Baru',
                 'role-edit'   => 'Mengubah Hak Akses Peran',
                 'role-delete' => 'Menghapus Peran',
+                'permission-list'   => 'Melihat Daftar Hak Akses',
+                'permission-create' => 'Menambah Hak Akses Baru',
+                'permission-edit'   => 'Mengubah Hak Akses',
+                'permission-delete' => 'Menghapus Hak Akses',
             ],
             'Manajemen Keuangan & Donatur' => [
                 'keuangan-list'   => 'Melihat Transaksi Keuangan',

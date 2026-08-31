@@ -357,4 +357,51 @@ class AuditAllFeaturesTest extends TestCase
         // Cleanup
         $user->delete();
     }
+
+    /** Test Full Permission CRUD Operations */
+    public function test_permission_crud_operations()
+    {
+        if (!$this->adminUser) {
+            $this->markTestSkipped('No admin user found');
+        }
+
+        $this->actingAs($this->adminUser);
+
+        // 1. Index and DataTables
+        $this->get('/permissions')->assertStatus(200)->assertSee('Kelola Hak Akses');
+        $this->getJson('/permissions', ['X-Requested-With' => 'XMLHttpRequest'])->assertStatus(200);
+
+        // 2. Create form
+        $this->get('/permissions/create')->assertStatus(200)->assertSee('Formulir Hak Akses Baru');
+
+        // 3. Store new permission
+        \Spatie\Permission\Models\Permission::where('name', 'test-custom-permission')->delete();
+
+        $storeResponse = $this->post('/permissions', [
+            'name' => 'test-custom-permission',
+            'roles' => [2], // Bendahara
+        ]);
+
+        $storeResponse->assertRedirect(route('permissions.index'));
+        $created = \Spatie\Permission\Models\Permission::where('name', 'test-custom-permission')->first();
+        $this->assertNotNull($created);
+
+        // 4. Edit form
+        $this->get("/permissions/{$created->id}/edit")->assertStatus(200)->assertSee('Edit Hak Akses');
+
+        // 5. Update permission
+        $updateResponse = $this->put("/permissions/{$created->id}", [
+            'name' => 'test-custom-permission-updated',
+            'roles' => [2, 3], // Bendahara & Sekretaris
+        ]);
+
+        $updateResponse->assertRedirect(route('permissions.index'));
+        $updated = \Spatie\Permission\Models\Permission::where('name', 'test-custom-permission-updated')->first();
+        $this->assertNotNull($updated);
+
+        // 6. Delete permission
+        $deleteResponse = $this->delete("/permissions/{$updated->id}");
+        $deleteResponse->assertRedirect(route('permissions.index'));
+        $this->assertNull(\Spatie\Permission\Models\Permission::find($updated->id));
+    }
 }

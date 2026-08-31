@@ -62,7 +62,15 @@
                     <a class="nav-link {{ request()->routeIs('roles.*') ? '' : 'collapsed' }}"
                         href="{{ route('roles.index') }}">
                         <i class="bi bi-shield-lock"></i>
-                        <span>Peran & Hak Akses</span>
+                        <span>Kelola Peran (Roles)</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('permissions.*') ? '' : 'collapsed' }}"
+                        href="{{ route('permissions.index') }}">
+                        <i class="bi bi-key"></i>
+                        <span>Kelola Hak Akses (Permissions)</span>
                     </a>
                 </li>
             @endcan

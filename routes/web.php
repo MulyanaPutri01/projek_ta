@@ -21,6 +21,7 @@ use App\Http\Controllers\CatatanController;
 use App\Http\Controllers\KondisiController;
 use App\Http\Controllers\ProfilMasjidController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\DisplayMasjidController;
 
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
 
     Route::middleware('permission:role-list|role-create|role-edit|role-delete')->group(function () {
         Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
     });
 
     // Manajemen Keuangan & Donatur (Spatie Permissions)

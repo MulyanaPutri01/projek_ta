@@ -19,6 +19,7 @@ class RolePermissionSeeder extends Seeder
             // Modul Manajemen Pengguna & Hak Akses
             'user-list', 'user-create', 'user-edit', 'user-delete',
             'role-list', 'role-create', 'role-edit', 'role-delete',
+            'permission-list', 'permission-create', 'permission-edit', 'permission-delete',
 
             // Modul Keuangan & Donatur
             'keuangan-list', 'keuangan-create', 'keuangan-edit', 'keuangan-delete',
