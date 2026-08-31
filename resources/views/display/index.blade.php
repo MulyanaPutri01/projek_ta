@@ -177,22 +177,35 @@
                     </div>
 
                     <!-- SLIDE 4: GALERI DOKUMENTASI DENGAN KEN BURNS EFFECT -->
-                    @if($galeris->isNotEmpty())
                     <div class="tv-slide" data-slide-name="Galeri Foto">
                         <div class="h-100 d-flex flex-column justify-content-between">
                             <div class="tv-slide-badge">
                                 <i class="bi bi-images"></i> Dokumentasi Aktivitas & Ibadah Masjid
                             </div>
                             <div class="tv-galeri-frame">
-                                <img src="{{ asset('storage/' . $galeris->first()->foto) }}" class="tv-galeri-img" alt="Foto Galeri">
-                                <div class="tv-galeri-caption">
-                                    <h4 class="text-white fw-bold mb-1 fs-5">{{ $galeris->first()->judul }}</h4>
-                                    <small class="text-white-50">{{ $galeris->first()->kegiatan?->nama_kegiatan ?? 'Kegiatan Rutin Jamaah & Pemakmuran Masjid' }}</small>
-                                </div>
+                                @if($galeris->isNotEmpty())
+                                    <img src="{{ $galeris->first()->image_url ?? asset('assets-landing/img/gallery/gallery-1.jpg') }}" 
+                                         id="galeriDisplayImg" 
+                                         class="tv-galeri-img" 
+                                         alt="{{ $galeris->first()->nama_foto ?? 'Foto Galeri' }}"
+                                         onerror="this.onerror=null; this.src='{{ asset('assets-landing/img/gallery/gallery-1.jpg') }}';">
+                                    <div class="tv-galeri-caption">
+                                        <h4 class="text-white fw-bold mb-1 fs-5" id="galeriDisplayTitle">{{ $galeris->first()->nama_foto ?? 'Dokumentasi Masjid' }}</h4>
+                                        <small class="text-white-50" id="galeriDisplaySubtitle">{{ $galeris->first()->kegiatan?->nama_kegiatan ?? 'Kegiatan Rutin Jamaah & Pemakmuran Masjid' }}</small>
+                                    </div>
+                                @else
+                                    <img src="{{ asset('assets-landing/img/gallery/gallery-1.jpg') }}" 
+                                         id="galeriDisplayImg" 
+                                         class="tv-galeri-img" 
+                                         alt="Foto Galeri">
+                                    <div class="tv-galeri-caption">
+                                        <h4 class="text-white fw-bold mb-1 fs-5" id="galeriDisplayTitle">Dokumentasi Aktivitas & Pemakmuran Masjid</h4>
+                                        <small class="text-white-50" id="galeriDisplaySubtitle">Kegiatan Rutin Jamaah & Pemakmuran Masjid</small>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
-                    @endif
 
                     <!-- SLIDE 5: AYAT AL-QUR'AN & MUTIARA HADITS -->
                     <div class="tv-slide" data-slide-name="Mutiara Hadits">
@@ -492,11 +505,13 @@
 
     <!-- ================= TV DISPLAY ENGINE SCRIPT ================= -->
     <script>
-        // Data Hadits & Dzikir Arrays
+        // Data Hadits & Dzikir & Galeri Arrays
         const haditsArray = @json($haditsList);
         const dzikirArray = @json($dzikirList);
+        const galeriArray = @json($galeris);
         let haditsIndex = 0;
         let dzikirIndex = 0;
+        let galeriIndex = 0;
 
         // Audio Tone Generator via Web Audio API (100% reliable without missing audio files)
         let audioCtx = null;
@@ -686,7 +701,31 @@
             slides[currentSlide].classList.add('active');
             if (dots[currentSlide]) dots[currentSlide].classList.add('active');
 
-            // Rotate Hadits if Hadits slide is active
+            // Rotate Galeri if Galeri slide is active (Slide 3)
+            if (currentSlide === 3 && galeriArray.length > 0) {
+                const currentGaleri = galeriArray[galeriIndex];
+                const imgEl = document.getElementById('galeriDisplayImg');
+                const titleEl = document.getElementById('galeriDisplayTitle');
+                const subEl = document.getElementById('galeriDisplaySubtitle');
+
+                if (imgEl && currentGaleri.image_url) {
+                    imgEl.src = currentGaleri.image_url;
+                    imgEl.alt = currentGaleri.nama_foto || 'Dokumentasi Masjid';
+                }
+                if (titleEl) {
+                    titleEl.innerText = currentGaleri.nama_foto || 'Dokumentasi Masjid';
+                }
+                if (subEl) {
+                    subEl.innerText = (currentGaleri.kegiatan && currentGaleri.kegiatan.nama_kegiatan) 
+                        ? currentGaleri.kegiatan.nama_kegiatan 
+                        : 'Kegiatan Rutin Jamaah & Pemakmuran Masjid';
+                }
+
+                // Advance index for next rotation
+                galeriIndex = (galeriIndex + 1) % galeriArray.length;
+            }
+
+            // Rotate Hadits if Hadits slide is active (Slide 4)
             if (currentSlide === 4 && haditsArray.length > 0) {
                 haditsIndex = (haditsIndex + 1) % haditsArray.length;
                 document.getElementById('haditsArabText').innerText = haditsArray[haditsIndex].arab;

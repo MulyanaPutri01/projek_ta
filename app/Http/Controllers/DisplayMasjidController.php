@@ -106,8 +106,26 @@ class DisplayMasjidController extends Controller
         $galeris = Galeri::with('kegiatan')
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
-            ->take(6)
+            ->take(8)
             ->get();
+
+        $galeris->transform(function ($item, $key) {
+            $fallbackIndex = ($key % 8) + 1;
+            $url = asset('assets-landing/img/gallery/gallery-' . $fallbackIndex . '.jpg');
+
+            if (!empty($item->gambar)) {
+                if (file_exists(public_path('storage/' . $item->gambar))) {
+                    $url = asset('storage/' . $item->gambar);
+                } elseif (file_exists(public_path('storage/galeri_masjid/' . $item->gambar))) {
+                    $url = asset('storage/galeri_masjid/' . $item->gambar);
+                } elseif (file_exists(public_path('assets-landing/img/gallery/' . $item->gambar))) {
+                    $url = asset('assets-landing/img/gallery/' . $item->gambar);
+                }
+            }
+
+            $item->image_url = $url;
+            return $item;
+        });
 
         // 5. Petugas Sholat & Khutbah Jumat
         $petugasJumat = $settings['petugas_jumat'] ?? [
